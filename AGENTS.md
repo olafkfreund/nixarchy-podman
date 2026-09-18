@@ -84,7 +84,8 @@ Real captures only, and never of anything but the plugin and `demo-*` objects:
 
 1. Snapshot `podman ps -a` / `images` / `volume ls` / `network ls`, and back up
    `~/.config/omarchy/shell.json` and `~/.config/omarchy/extensions/omarchy-menu.jsonc`.
-2. `docs/capture.sh --setup`, then `--unhealthy`. Open a new, empty workspace
+2. `docs/capture.sh --setup`, then `--unhealthy`. Setup refuses if any demo name
+   already exists, and records what it creates; teardown removes only that record. Open a new, empty workspace
    (`hyprctl dispatch 'hl.dsp.focus({ workspace = "31" })'`), and park the pointer
    off-screen so no tooltip lands in frame.
 3. Drive the surface with keys, then `docs/capture.sh --shot NAME X,Y WxH` to crop it.
@@ -93,7 +94,8 @@ Real captures only, and never of anything but the plugin and `demo-*` objects:
    encode to WebM (VP9, `-crf 40`) and MP4 (H.264, `-crf 28`).
 4. Look at every image and a frame sheet of every video before committing.
 5. `docs/capture.sh --teardown`, restore both config files, and diff the snapshot:
-   it must be identical apart from `demo-*`.
+   it must be identical apart from `demo-*`. Videos get `controls` (they autoplay and
+   loop, so people need a way to stop them).
 
 ## Rules
 

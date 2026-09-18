@@ -8,7 +8,7 @@ Podman for the [Omarchy](https://omarchy.org) shell on
 and networks on the bar and on a key.
 
 <figure class="shot">
-  <video autoplay muted loop playsinline preload="metadata" aria-label="Recording of the full-screen Podman menu stopping a container">
+  <video controls autoplay muted loop playsinline preload="metadata" aria-label="Recording of the full-screen Podman menu stopping a container">
     <source src="img/rec-menu.webm" type="video/webm">
     <source src="img/rec-menu.mp4" type="video/mp4">
   </video>
@@ -88,7 +88,7 @@ done, and does not need the widget to be in the bar at all.
   <figcaption>The full-screen menu over your desktop: the same tabs, drawn larger, holding the keyboard.</figcaption>
 </figure>
 <figure class="shot">
-  <video autoplay muted loop playsinline preload="metadata" aria-label="Recording of opening Podman from the Omarchy menu">
+  <video controls autoplay muted loop playsinline preload="metadata" aria-label="Recording of opening Podman from the Omarchy menu">
     <source src="img/rec-omarchy-menu.webm" type="video/webm">
     <source src="img/rec-omarchy-menu.mp4" type="video/mp4">
   </video>
@@ -138,7 +138,7 @@ done, and does not need the widget to be in the bar at all.
 ## A tour
 
 <figure class="shot">
-  <video autoplay muted loop playsinline preload="metadata" aria-label="Recording of the bar popup">
+  <video controls autoplay muted loop playsinline preload="metadata" aria-label="Recording of the bar popup">
     <source src="img/rec-popup.webm" type="video/webm">
     <source src="img/rec-popup.mp4" type="video/mp4">
   </video>

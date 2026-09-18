@@ -213,3 +213,24 @@ page.
   screenshotted with headless Chromium. The wordmark, sidebar, figures and
   videos render in the nixarchy style. One clipped code comment was
   shortened.
+
+### Review fixes (Copilot on PR #7)
+
+All three findings were correct:
+
+- **`--teardown` could remove the owner's objects.** It deleted by fixed
+  names. Now `--setup` refuses if any name it would use already exists, and
+  records every object it creates in a state file. `--teardown` removes only
+  the objects in that record.
+- **A pre-existing base image brought back #6.** Demo images were tagged
+  onto the base, so an owner who already had `alpine:3` would get one image
+  with two tags. Now demo images are built from a one-line Containerfile
+  with a label, which gives each its own id and a single tag, and the untag
+  trick is gone.
+
+  Tested with `alpine:3` present beforehand: the demo images got their own
+  ids; a second `--setup` exits 1; teardown kept the existing `alpine`,
+  removed only the `busybox` it pulled, and the Podman snapshot matches the
+  original `before.txt`.
+- **Autoplaying, looping videos had no way to stop them.** All three now
+  have `controls`.
