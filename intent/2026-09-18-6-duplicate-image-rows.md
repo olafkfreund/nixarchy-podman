@@ -1,5 +1,5 @@
 ---
-status: draft
+status: approved
 issue: 6
 author: olafkfreund
 ---
@@ -83,3 +83,9 @@ There are two defects, and either one alone is a bug:
 2. **Should the pipefail fix go upstream to `i228808/omapodman` together with
    this?** It is still open from #1, and this bug likely exists upstream too.
    I recommend keeping upstream work separate, as its own follow-up.
+
+## Decisions at approval
+
+Approved without answers to the open questions; the recommendations stand:
+1. One row per tag.
+2. Upstream contribution stays a separate follow-up.
