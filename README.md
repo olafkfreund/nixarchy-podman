@@ -125,7 +125,7 @@ Everything below is per-instance, from the Omarchy settings panel or `shell.json
 | Show stopped containers | on | Off lists only what is running. |
 | Show CPU and memory | on | Off skips `podman stats` entirely — worth it on a laptop. |
 | Measure what each volume costs | on | Off keeps the volume list instant and leaves per-volume sizes blank. The reclaimable total still works. |
-| Hide the bar icon when empty | off | On removes the button until Podman has something to show. |
+| Hide the bar icon when empty | off | On removes the button until the Containers tab lists at least one container. |
 
 The full-screen menu reads the same settings from the bar widget's entry each time it
 opens. The one exception is hiding the bar icon, which has no meaning in the menu.

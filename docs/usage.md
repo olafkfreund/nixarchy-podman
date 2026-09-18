@@ -87,7 +87,7 @@ The glyph tells you the state at a glance:
 | --- | --- |
 | Dim | Nothing is running |
 | Bright (accent colour) | At least one container is running |
-| Red | A container needs attention: unhealthy, crash-looping, or exited badly |
+| Red | A running container needs attention: its health check reports unhealthy, or it is restarting |
 
 Hover it for a one-line summary, such as `1 of 2 running`. Click to open the popup, and
 middle-click to refresh.
@@ -99,7 +99,9 @@ The popup has four tabs:
   first. Podman itself decides what counts as unused, so the list matches what a prune
   would take.
 
-The footer says what the tab holds and how much of it is reclaimable.
+The footer says what the tab holds and, for images and volumes, how much of it is
+reclaimable. On Networks it gives the count and how many are unused; Podman reports
+no size for them.
 
 ## The full-screen menu
 
@@ -150,7 +152,7 @@ Both surfaces use the same keys. Press `?` inside either to see them all.
 | Copy an id, or a volume's mount path | `c`; on Images, Volumes and Networks, `enter` does the same |
 | Remove one thing | `x`. It asks first, and **Cancel** is the default |
 | Reclaim space on this tab | `p`, or the footer button. It asks first, naming what will go |
-| Filter the list | `/`, then type. `↓` returns to the list, and `esc` clears the filter, then leaves it |
+| Filter the list | `/`, then type. `↓` returns to the list; if nothing matches, it stays in the filter. The first `esc` clears the text, the second leaves the filter |
 | Refresh now | `u` |
 | Open podman-tui | `d` |
 
@@ -168,7 +170,7 @@ Change these from the bar widget's settings in the Omarchy settings panel:
 | Show stopped containers | on | Off lists only running containers. |
 | Show CPU and memory | on | Off skips `podman stats` entirely. Worth it on a laptop. |
 | Measure what each volume costs | on | Off keeps the Volumes tab instant; per-volume sizes stay blank. |
-| Hide the bar icon when empty | off | On hides the glyph until Podman has something to show. |
+| Hide the bar icon when empty | off | On hides the glyph until the Containers tab lists at least one container. |
 
 The full-screen menu reads these each time it opens. A change applies the next time you
 open it, with no restart.
@@ -211,7 +213,8 @@ with its managed link. Such a directory comes from `omarchy plugin add`, a manua
 a checkout. Remove that directory and rebuild.
 
 **`d` does nothing.**
-podman-tui is not installed. Add `pkgs.podman-tui` to your packages.
+podman-tui is not installed, or not on `PATH`. Install it with your package manager;
+on NixOS, add `pkgs.podman-tui` to `environment.systemPackages`.
 
 ## Removal
 

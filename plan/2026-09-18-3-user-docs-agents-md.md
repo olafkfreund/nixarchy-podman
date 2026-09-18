@@ -141,8 +141,10 @@ Each step is one commit on `docs/3-user-docs-agents-md`, citing
 ## Tests
 
 - `git ls-files -s | awk '$1 == "120000"'` prints nothing.
-- `omarchy plugin validate .` exits 0. This is the checkout that
-  `plugin add` would use.
+- A fresh clone of the branch validates: `omarchy plugin validate` exits 0
+  on it. This is what `plugin add` installs. The working tree is not
+  checked, because after `nix build` it holds the untracked `result` link;
+  see the implementation record.
 - `nix flake check` passes, and `ls "$(readlink -f result)" | wc -l` is 10
   after `nix build`.
 - `node tests/run.js` passes 125.
@@ -188,3 +190,23 @@ package and the hosts are untouched in every case.
 - A fresh `claude -p` in the repo, asked without hints what must never be
   added, answers "symlinks, because `omarchy plugin add` clones the repo as
   the plugin folder".
+
+### Review fixes (Copilot on PR #4)
+
+Each finding was checked against the code, and all seven were correct:
+
+- **Red glyph.** Only a running container that is unhealthy or restarting
+  turns it red (`Model.isAlerting`). A bad exit does not.
+- **Networks footer.** It shows a count and how many are unused
+  (`Model.usageText`), not a reclaimable size.
+- **Hide when empty.** The glyph stays hidden until the Containers tab lists
+  a container. `counts.total` counts that tab only. Fixed in the README as
+  well.
+- **Filter.** Esc works in two steps (`PodmanView.qml:323-325`), and ↓
+  stays in the filter when nothing matches (`moveCursor`).
+- **podman-tui.** The troubleshooting fix is no longer Nix-only.
+- **Plan Tests.** The list now requires the fresh-clone validation that the
+  implementation record describes.
+
+The approved spec's matching verification line is left as written; this
+plan supersedes it, as the workflow requires.
