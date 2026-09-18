@@ -409,8 +409,8 @@ Panel {
   Process {
     id: listProcess
     command: root.showStopped
-      ? ["sh", "-c", "podman ps --all --format '" + root.containerFormat + "' | head -c 1M"]
-      : ["sh", "-c", "podman ps --format '" + root.containerFormat + "' | head -c 1M"]
+      ? ["sh", "-c", "set -o pipefail; podman ps --all --format '" + root.containerFormat + "' | head -c 1M"]
+      : ["sh", "-c", "set -o pipefail; podman ps --format '" + root.containerFormat + "' | head -c 1M"]
     stdout: StdioCollector { id: listOut; waitForEnd: true }
     stderr: StdioCollector { id: listErr; waitForEnd: true }
 
@@ -443,7 +443,7 @@ Panel {
   Process {
     id: statsProcess
     command: ["sh", "-c",
-      "podman stats --no-stream --format '{\"ID\":{{json .ID}},\"CPUPerc\":{{json .CPUPerc}}," +
+      "set -o pipefail; podman stats --no-stream --format '{\"ID\":{{json .ID}},\"CPUPerc\":{{json .CPUPerc}}," +
       "\"MemUsage\":{{json .MemUsage}},\"MemPerc\":{{json .MemPerc}}}' | head -c 1M"]
     stdout: StdioCollector { id: statsOut; waitForEnd: true }
 
@@ -455,7 +455,7 @@ Panel {
   Process {
     id: imagesProcess
     command: ["sh", "-c",
-      "podman images --format '{\"ID\":{{json .ID}},\"Repository\":{{json .Repository}}," +
+      "set -o pipefail; podman images --format '{\"ID\":{{json .ID}},\"Repository\":{{json .Repository}}," +
       "\"Tag\":{{json .Tag}},\"Size\":{{json .Size}},\"CreatedSince\":{{json .CreatedSince}}," +
       "\"Containers\":{{json .Containers}}}' | head -c 1M"]
     stdout: StdioCollector { id: imagesOut; waitForEnd: true }
@@ -470,7 +470,7 @@ Panel {
   Process {
     id: volumesProcess
     command: ["sh", "-c",
-      "{ podman volume ls --format '{\"Name\":{{json .Name}},\"Driver\":{{json .Driver}}," +
+      "set -o pipefail; { podman volume ls --format '{\"Name\":{{json .Name}},\"Driver\":{{json .Driver}}," +
       "\"Mountpoint\":{{json .Mountpoint}},\"Labels\":{{json .Labels}}}'; echo '#UNUSED'; " +
       "podman volume ls --filter dangling=true --format '{{.Name}}'; } | head -c 1M"]
     stdout: StdioCollector { id: volumesOut; waitForEnd: true }
@@ -485,7 +485,7 @@ Panel {
   Process {
     id: networksProcess
     command: ["sh", "-c",
-      "{ podman network ls --format '{\"ID\":{{json .ID}},\"Name\":{{json .Name}}," +
+      "set -o pipefail; { podman network ls --format '{\"ID\":{{json .ID}},\"Name\":{{json .Name}}," +
       "\"Driver\":{{json .Driver}},\"Internal\":{{json .Internal}},\"Labels\":{{json .Labels}}}'; " +
       "echo '#UNUSED'; podman network ls --filter dangling=true --format '{{.Name}}'; } | head -c 1M"]
     stdout: StdioCollector { id: networksOut; waitForEnd: true }
@@ -499,7 +499,7 @@ Panel {
 
   Process {
     id: usageProcess
-    command: ["sh", "-c", "podman system df --format '{{json .}}' | head -c 64k"]
+    command: ["sh", "-c", "set -o pipefail; podman system df --format '{{json .}}' | head -c 64k"]
     stdout: StdioCollector { id: usageOut; waitForEnd: true }
 
     onExited: function(code) {
@@ -513,7 +513,7 @@ Panel {
   Process {
     id: volumeSizeProcess
     command: ["sh", "-c",
-      "podman system df -v 2>/dev/null | awk '/^Local Volumes space usage:/{f=1;next} " +
+      "set -o pipefail; podman system df -v 2>/dev/null | awk '/^Local Volumes space usage:/{f=1;next} " +
       "f&&/^VOLUME NAME/{g=1;next} g&&NF==0{g=0} g' | head -c 1M"]
     stdout: StdioCollector { id: volumeSizeOut; waitForEnd: true }
 
