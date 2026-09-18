@@ -1,7 +1,13 @@
+---
+layout: manual
+title: The manual
+permalink: /usage/
+---
+
 # Using nixarchy.podman
 
 A walkthrough, from installing it to fixing the usual problems. For the reference
-tables (every key, every setting, IPC), see the [README](../README.md).
+tables (every key, every setting, IPC), see the [README](https://github.com/olafkfreund/nixarchy-podman#readme).
 
 ## What it is
 
@@ -44,8 +50,8 @@ Every command is run by name from `PATH`; nothing is wrapped or bundled.
    programs.nixarchy.plugins."nixarchy.podman".src =
      inputs.nixarchy-podman.packages.${pkgs.stdenv.hostPlatform.system}.default;
 
-   virtualisation.podman.enable = true;              # nixarchy only enables it with services.boxes
-   environment.systemPackages = [ pkgs.podman-tui ]; # optional: the `d` key opens it
+   virtualisation.podman.enable = true;              # not on by default in nixarchy
+   environment.systemPackages = [ pkgs.podman-tui ]; # optional, for the `d` key
    ```
 
 3. Rebuild with `nixos-rebuild switch`. nixarchy validates the plugin during the build
@@ -108,7 +114,7 @@ no size for them.
 ### Add it to the Omarchy menu
 
 Open `~/.config/omarchy/extensions/omarchy-menu.jsonc` and paste the `"apps.podman"`
-row from [`share/omarchy-menu.jsonc`](../share/omarchy-menu.jsonc) inside its top-level
+row from [`share/omarchy-menu.jsonc`](https://github.com/olafkfreund/nixarchy-podman/blob/master/share/omarchy-menu.jsonc) inside its top-level
 `{ }`. Mind the comma between rows. Omarchy reloads the file when you save.
 
 Now press **Super+Alt+Space** and type `podman`. The **Podman** row is under Apps;
@@ -151,7 +157,7 @@ Both surfaces use the same keys. Press `?` inside either to see them all.
 | Copy its name | `n` |
 | Copy an id, or a volume's mount path | `c`; on Images, Volumes and Networks, `enter` does the same |
 | Remove one thing | `x`. It asks first, and **Cancel** is the default |
-| Reclaim space on this tab | `p`, or the footer button. It asks first, naming what will go |
+| Reclaim space on this tab | `p`, or the footer button. It asks first, saying what kind of thing will go |
 | Filter the list | `/`, then type. `↓` returns to the list; if nothing matches, it stays in the filter. The first `esc` clears the text, the second leaves the filter |
 | Refresh now | `u` |
 | Open podman-tui | `d` |
@@ -161,7 +167,17 @@ reason appears under the list until you dismiss it.
 
 ## Settings
 
-Change these from the bar widget's settings in the Omarchy settings panel:
+Change these with `omarchy bar set`, which edits the widget's entry in
+`~/.config/omarchy/shell.json`. Pass `--json` so a value keeps its type; without it,
+`false` is stored as the text `"false"` and ignored:
+
+```bash
+omarchy bar set nixarchy.podman showStats false --json
+omarchy bar set nixarchy.podman refreshIntervalSec 30 --json
+omarchy bar set nixarchy.podman defaultTab '"Volumes"' --json
+```
+
+The settings are:
 
 | Setting | Default | What it changes |
 | --- | --- | --- |

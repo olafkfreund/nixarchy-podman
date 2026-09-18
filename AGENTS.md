@@ -32,7 +32,8 @@ is [`docs/usage.md`](docs/usage.md).
 | `share/omarchy-menu.jsonc` | The Omarchy menu row users paste in. |
 | `tests/` | Node tests for `Model.js` (`tests/run.js`). |
 | `intent/`, `spec/`, `plan/` | Per-task design artifacts. See Workflow. |
-| `docs/usage.md` | The user guide. |
+| `docs/usage.md` | The user guide; also the site's `/usage/` page (front matter on top). |
+| `docs/` (rest) | The GitHub Pages site: `index.md` (user story and tour), `_layouts/`, `_includes/logo.html`, `assets/` copied from nixarchy with source headers, `img/` captures, `capture.sh`. Deployed by `.github/workflows/pages.yml`. |
 
 ## Commands
 
@@ -77,6 +78,25 @@ Caveats:
 - Keys sent before a surface holds the keyboard land in whatever window had focus.
   Confirm the layer is up before typing.
 
+## Retaking the captures
+
+Real captures only, and never of anything but the plugin and `demo-*` objects:
+
+1. Snapshot `podman ps -a` / `images` / `volume ls` / `network ls`, and back up
+   `~/.config/omarchy/shell.json` and `~/.config/omarchy/extensions/omarchy-menu.jsonc`.
+2. `docs/capture.sh --setup`, then `--unhealthy`. Setup refuses if any demo name
+   already exists, and records what it creates; teardown removes only that record. Open a new, empty workspace
+   (`hyprctl dispatch 'hl.dsp.focus({ workspace = "31" })'`), and park the pointer
+   off-screen so no tooltip lands in frame.
+3. Drive the surface with keys, then `docs/capture.sh --shot NAME X,Y WxH` to crop it.
+   Filter to `demo` on Images and Volumes: unfiltered, they show the owner's own images
+   and volumes. Recordings: `wl-screenrec --low-power=off -m 30 -g "X,Y WxH"`, then
+   encode to WebM (VP9, `-crf 40`) and MP4 (H.264, `-crf 28`).
+4. Look at every image and a frame sheet of every video before committing.
+5. `docs/capture.sh --teardown`, restore both config files, and diff the snapshot:
+   it must be identical apart from `demo-*`. Videos get `controls` (they autoplay and
+   loop, so people need a way to stop them).
+
 ## Rules
 
 Each rule records a real failure or a hard constraint:
@@ -103,7 +123,8 @@ Each rule records a real failure or a hard constraint:
   background poll for the glyph is the only exception.
 - **Logic goes in `Model.js`, with a Node test.** Keep QML to drawing and wiring.
 - **A user-visible change updates `docs/usage.md` (and the README tables) in the same
-  PR.**
+  PR, and retakes the captures in `docs/img/` it makes wrong.** `docs/img/` must stay
+  under 8 MB (CI enforces it): it ships inside every `omarchy plugin add` clone.
 
 ## Workflow
 
