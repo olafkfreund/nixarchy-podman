@@ -289,3 +289,35 @@ Deviations from the steps above, each made in the commit that needed it
   `scale` on the PodmanView inside `Menu.qml` (laid out at `Style.space(680)`,
   card sized to the scaled view). The bar popup is unchanged. Verified live:
   text stays sharp, and a click on a tab lands through the transform.
+
+### Test results (p620, 2026-09-18)
+
+- **A. Local install:** `nix build` copied into
+  `~/.config/omarchy/plugins/nixarchy.podman` as a real directory, then the
+  shell restarted. No QML errors. The menu opens, and the bar popup opens and
+  closes through `omarchy shell nixarchy.podman.bar`.
+- **B. Bar parity:** every key listed passes, driven through ai-mirror.
+  Recorded in the step 3 commit.
+- **C. Menu surface:** all passes, recorded in the step 4 commit:
+  - Tab cycling, payload tab, scrim close, and toggle after Esc all work.
+  - A stop survives an immediate Esc.
+  - A settings change shows on the next open with no restart.
+  - Idle cost, measured by inotify on the podman binary: 20 execs in 12s
+    open, against only the bar's own poll while closed.
+- **D. pipefail:** checked only at the shell level, not end to end in the
+  UI. `sh -c 'set -o pipefail; false | head -c 1M'` exits 1, which sends
+  `listProcess` down its existing error branch. The running shell's
+  `PATH` cannot take a failing stub without restarting the whole desktop
+  session.
+- **E. Automated:** `node tests/run.js` passes 125/125. `nix flake check`
+  passes: x86_64 is built and every system is evaluated. A planted colour
+  fails the check.
+- **Omarchy menu row:** searching the menu lists "Podman" under Apps, and
+  clicking the row opens the menu. A keyboard-only pick inside Omarchy's own
+  menu was not confirmed: its search field did not move the selection with
+  ↓ during the test.
+
+Found on this host, out of scope: rootless Podman's overlay storage reports
+missing layer links. `podman system df -v` exits 125, and new containers
+from `ubuntu:24.04` fail. Per-volume sizes stay blank here for that reason.
+The plugin is not the cause.
