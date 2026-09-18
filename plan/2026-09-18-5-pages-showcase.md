@@ -183,3 +183,18 @@ page.
 - **Step 4: prune wording.** The prune question names the category ("every
   volume that no container is using"), not the individual items. The docs'
   "naming what will go" is corrected in step 7.
+- **Step 5: two takes discarded for privacy.** The first popup take and the
+  first menu take walked the Images and Volumes tabs unfiltered, which
+  showed the owner's own images (postgres, keycloak) and anonymous volumes.
+  Both were deleted unencoded. The kept takes stay on Containers (demo
+  containers only) and Networks (`demo-net` plus Podman's predefined
+  `podman`) and use the filter. The pointer is parked off-screen, because
+  a hover tooltip stayed in frame in the first menu take.
+- **Step 5: Omarchy menu recording.** Recording starts after "podman" is
+  typed: the menu's unfiltered first screen lists the owner's installed
+  apps. So `rec-omarchy-menu` shows the filtered results and the click that
+  opens the Podman menu, not the Super+Alt+Space press. (Keyboard selection
+  inside Omarchy's own menu did not move with ↓ in #1 either.)
+- **Step 5: sizes.** `rec-popup` 520 px at native width (the popup is
+  narrower than 1280), `rec-menu` and `rec-omarchy-menu` 1280 px.
+  `demo.gif` is 800 px, 7.5 s, 0.64 MB. The whole of `docs/img` is 5.5 MB.
