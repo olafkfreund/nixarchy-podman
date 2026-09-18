@@ -198,3 +198,18 @@ page.
 - **Step 5: sizes.** `rec-popup` 520 px at native width (the popup is
   narrower than 1280), `rec-menu` and `rec-omarchy-menu` 1280 px.
   `demo.gif` is 800 px, 7.5 s, 0.64 MB. The whole of `docs/img` is 5.5 MB.
+- **Step 6: teardown verified.** No `demo-*` objects remain, and every
+  image pulled for the shoot is gone. The Podman snapshot is identical to
+  `before.txt`. `shell.json` and `omarchy-menu.jsonc` `cmp` equal to their
+  backups; `shell.json` was restored a second time after a step-7 test of
+  `omarchy bar set … --json`. DP-2 is back on workspace 11, workspace 31
+  closed itself, and ai-mirror control was released.
+- **Step 7: corrections from the shoot.** The settings instructions now use
+  `omarchy bar set nixarchy.podman <key> <value> --json`, checked for a
+  boolean and a string, in place of a settings panel that this Omarchy
+  build does not have. The prune wording is corrected. The hero clip starts
+  0.6 s later, so its first frame is not mid fade-in.
+- **Step 7: looked at, not just built.** Both pages were served locally and
+  screenshotted with headless Chromium. The wordmark, sidebar, figures and
+  videos render in the nixarchy style. One clipped code comment was
+  shortened.

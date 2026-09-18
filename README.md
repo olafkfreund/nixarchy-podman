@@ -3,6 +3,10 @@
 A native Podman manager for the [Omarchy](https://omarchy.org/) shell, packaged for NixOS
 and [nixarchy](https://github.com/olafkfreund/nixarchy).
 
+**[See it in action →](https://olafkfreund.github.io/nixarchy-podman/)** — the showcase site, with the full tour.
+
+![The full-screen menu: moving with j, stopping a container with enter](docs/img/demo.gif)
+
 Containers, images, volumes and networks on four tabs, without opening a terminal and
 without reaching for the mouse if you would rather not. There are two ways in, with the
 same tabs and the same keys (new here? start with [the usage guide](docs/usage.md)):
@@ -116,7 +120,8 @@ https://github.com/olafkfreund/nixarchy-podman` and then enable it the same way.
 
 ## Settings
 
-Everything below is per-instance, from the Omarchy settings panel or `shell.json`.
+Everything below is per-instance, set with `omarchy bar set nixarchy.podman <key> <value> --json`
+(it edits `shell.json`; see [the manual](docs/usage.md#settings)).
 
 | Setting | Default | What it changes |
 | --- | --- | --- |
