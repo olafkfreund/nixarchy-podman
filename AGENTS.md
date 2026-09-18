@@ -42,7 +42,14 @@ nix flake check                                # tests + manifest, entry points,
 nix flake check --all-systems --no-build       # aarch64 evaluates
 nix build                                      # the plugin folder, exactly as nixarchy links it
 omarchy plugin validate "$(readlink -f result)"
-omarchy plugin validate .                      # the checkout, as `omarchy plugin add` would see it
+```
+
+To see the repo as `omarchy plugin add` would, validate a fresh clone rather than
+the working tree. The `result` link that `nix build` leaves behind is itself a symlink,
+so validating `.` fails once you have built:
+
+```bash
+d=$(mktemp -d) && git clone -q . "$d/p" && rm -rf "$d/p/.git" && omarchy plugin validate "$d/p"
 ```
 
 ## Verifying live (on a nixarchy desktop)

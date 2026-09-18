@@ -155,3 +155,36 @@ Each step is one commit on `docs/3-user-docs-agents-md`, citing
 Everything is additive Markdown except the README trim. Revert the PR's
 merge commit, or `git revert` a single step's commit. The plugin, the
 package and the hosts are untouched in every case.
+
+## Implementation record
+
+### Deviations
+
+- **Step 3.** The shared no-symlink rule said "`CLAUDE.md` imports this file".
+  Copied into `copilot-instructions.md`, "this file" pointed at the wrong
+  file. Both copies now name `AGENTS.md`, so the text stays word for word
+  identical and correct in both places.
+- **Step 4.** Checking the old README against the guide found two things
+  the move would have lost: the requirements for `wl-copy` and the terminal,
+  and `omarchy bar move`. Both were added to `docs/usage.md`.
+- **Tests: `omarchy plugin validate .`.** It fails in a working tree after
+  `nix build`, because the untracked `result` link is a symlink, even though
+  the repo tracks none. The check now validates a fresh clone, which is what
+  `omarchy plugin add` actually installs. `AGENTS.md`'s Commands section was
+  corrected to match; as first written, it would have misled any agent that
+  had just built.
+
+### Results (p620)
+
+- The repo tracks no symlinks (`git ls-files -s` shows no mode 120000). A
+  fresh clone contains 0 symlinks and passes `omarchy plugin validate`.
+- `nix flake check` passes, and `nix build` still yields the same ten files.
+- `node tests/run.js` passes 125/125.
+- Every relative link in `README.md`, `docs/usage.md`, `AGENTS.md` and
+  `.github/copilot-instructions.md` resolves.
+- Every UI string the guide quotes is grepped from `Model.js` or
+  `PodmanView.qml`, and every key it names has its handler. Its read-only
+  commands run.
+- A fresh `claude -p` in the repo, asked without hints what must never be
+  added, answers "symlinks, because `omarchy plugin add` clones the repo as
+  the plugin folder".
