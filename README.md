@@ -116,7 +116,12 @@ omarchy plugin enable nixarchy.podman
 ```
 
 nixarchy validates the plugin at build time and links it into
-`~/.config/omarchy/plugins/nixarchy.podman`.
+`~/.config/omarchy/plugins/nixarchy.podman`. Enabling also places the widget in the right
+section of the bar. To put it somewhere else:
+
+```bash
+omarchy bar move nixarchy.podman --section left
+```
 
 ### Coming from OmaPodman
 
@@ -134,7 +139,7 @@ Settings do not carry over, because they belong to the old id.
 
 ```bash
 omarchy plugin add https://github.com/olafkfreund/nixarchy-podman
-omarchy plugin enable nixarchy.podman
+omarchy plugin enable nixarchy.podman   # also places the widget in the bar
 ```
 
 ## The Omarchy menu and a key

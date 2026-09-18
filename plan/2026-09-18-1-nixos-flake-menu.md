@@ -323,3 +323,20 @@ stayed blank. The plugin was not the cause. After the store was repaired
 (same day), the plugin's own `system df -v` pipeline, pipefail included,
 exits 0. The menu's Volumes tab then showed every volume's size, biggest
 first, with the reclaimable total in the footer.
+
+### Review fixes (Copilot on PR #2)
+
+- **Volume and network listings.** `pipefail` saw only the `{ …; }` group's
+  status, which is that of its last command. A failing first `podman … ls`
+  therefore still parsed as an empty list. Each first query is now followed
+  by `|| exit 1`. Proven in the shell: before the fix, a failing first
+  command exited 0; now it exits 1, and the success path still exits 0.
+- **Stale volume sizes.** Turning `showVolumeSizes` off no longer leaves
+  cached sizes on screen. An in-flight size query that finishes after the
+  setting was switched off does not bring them back either.
+- **Polling after close.** When an action finishes, the list is refreshed
+  only if the surface is open or the bar keeps its background poll. A
+  closed menu stays quiet.
+- **README placement nit.** Checked and not a real gap: `omarchy plugin
+  enable` places the widget in the right section itself, as seen on p620
+  (`right[1]`). The README now says so and shows `omarchy bar move`.

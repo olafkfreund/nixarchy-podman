@@ -54,7 +54,7 @@ Item {
 
   // `podman system df -v` is the only source for what a volume costs, and it
   // arrives on its own schedule, so it is folded in here rather than stored.
-  readonly property var sizedVolumes: Model.mergeVolumeUsage(volumes, volumeSizes)
+  readonly property var sizedVolumes: Model.mergeVolumeUsage(volumes, showVolumeSizes ? volumeSizes : [])
 
   readonly property var items: {
     if (tab === "images") return images
@@ -315,7 +315,7 @@ Item {
     id: volumesProcess
     command: ["sh", "-c",
       "set -o pipefail; { podman volume ls --format '{\"Name\":{{json .Name}},\"Driver\":{{json .Driver}}," +
-      "\"Mountpoint\":{{json .Mountpoint}},\"Labels\":{{json .Labels}}}'; echo '#UNUSED'; " +
+      "\"Mountpoint\":{{json .Mountpoint}},\"Labels\":{{json .Labels}}}' || exit 1; echo '#UNUSED'; " +
       "podman volume ls --filter dangling=true --format '{{.Name}}'; } | head -c 1M"]
     stdout: StdioCollector { id: volumesOut; waitForEnd: true }
 
@@ -330,8 +330,8 @@ Item {
     id: networksProcess
     command: ["sh", "-c",
       "set -o pipefail; { podman network ls --format '{\"ID\":{{json .ID}},\"Name\":{{json .Name}}," +
-      "\"Driver\":{{json .Driver}},\"Internal\":{{json .Internal}},\"Labels\":{{json .Labels}}}'; " +
-      "echo '#UNUSED'; podman network ls --filter dangling=true --format '{{.Name}}'; } | head -c 1M"]
+      "\"Driver\":{{json .Driver}},\"Internal\":{{json .Internal}},\"Labels\":{{json .Labels}}}' " +
+      "|| exit 1; echo '#UNUSED'; podman network ls --filter dangling=true --format '{{.Name}}'; } | head -c 1M"]
     stdout: StdioCollector { id: networksOut; waitForEnd: true }
 
     onExited: function(code) {
@@ -362,7 +362,7 @@ Item {
     stdout: StdioCollector { id: volumeSizeOut; waitForEnd: true }
 
     onExited: function(code) {
-      if (code === 0) root.volumeSizes = Model.parseVolumeSizeTable(volumeSizeOut.text)
+      if (code === 0 && root.showVolumeSizes) root.volumeSizes = Model.parseVolumeSizeTable(volumeSizeOut.text)
     }
   }
 
@@ -376,7 +376,8 @@ Item {
       // mounted, an image still referenced — and its reason is the only
       // useful thing the panel can say, so it says it verbatim.
       if (code !== 0) root.lastError = Model.errorText(actionErr.text)
-      root.refresh()
+      // A closed menu stays loaded; it must not poll just because an action ended.
+      if (root.active || root.background) root.refresh()
       root.refreshResources()
       root.refreshUsage()
       if (root.tab === "volumes") root.volumeSizes = []
