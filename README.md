@@ -72,7 +72,7 @@ inside either for this same list.
 
 | Key | Does |
 | --- | --- |
-| `x` | Remove whatever the cursor is on |
+| `x` | Remove whatever the cursor is on (on an image row, that tag) |
 | `p` | Prune everything unused on this tab |
 
 Both always ask first.

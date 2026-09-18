@@ -110,3 +110,12 @@ No deviations from the steps.
 - **Installed copy.** `~/.config/omarchy/plugins/nixarchy.podman` now holds
   this branch's build. It is still a real directory, which the host-wiring
   follow-up must remove first.
+
+### Review fix (Copilot on PR #8)
+
+- **Docs.** The plan said "no docs change", which was wrong. `AGENTS.md`
+  requires a user-visible change to update `docs/usage.md` and the README
+  tables in the same PR, and one row per tag plus remove-per-tag is
+  user-visible. The guide now says so in "The bar popup" and "Everyday
+  tasks", and the README key table notes it for `x`. The captures are still
+  accurate, because every showcase image has a single tag.
