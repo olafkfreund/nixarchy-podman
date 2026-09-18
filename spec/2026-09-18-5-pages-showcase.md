@@ -1,5 +1,5 @@
 ---
-status: draft
+status: approved
 issue: 5
 intent: intent/2026-09-18-5-pages-showcase.md
 ---
@@ -217,3 +217,8 @@ The plugin, `flake.nix` and the package's ten files do not change.
 6. A fresh clone contains no symlinks and passes `omarchy plugin validate`.
    `nix flake check` passes, and the package is still ten files.
 7. The README GIF is under 1.5 MB and renders on github.com.
+
+## Decision at approval
+
+The owner approved this spec with one addition: the shoot runs on a **new,
+empty workspace**, opened for the purpose, not on one already in use.
