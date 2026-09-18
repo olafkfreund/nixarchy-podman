@@ -156,3 +156,30 @@ page.
   snippet) became absolute GitHub URLs. The site publishes only `docs/`, so
   relative links out of it would 404 there. The absolute URLs work on both
   github.com and the site.
+- **Step 4: widget placement for the shoot.** On DP-2 the widget sat in the
+  right section's overflow, where the visible red icon was Herdr's. It was
+  moved to the left section with `omarchy bar move` so that it could be
+  clicked; `shell.json` is restored from backup at teardown.
+- **Step 4: one tag per demo image.** An image with two tags (`alpine:3` and
+  `localhost/demo/shop`) shows duplicate rows in the list. That is a real
+  bug in `Model.js` (`imageRow` keys rows by image id, and `reconcilePlan`
+  never drops the trailing duplicates), filed as **#6** for its own gated
+  fix. It is not patched here. `capture.sh` untags the base images it pulled
+  itself, so the captures show the plugin's correct behaviour without hiding
+  the bug. The first attempt used `podman untag IMAGE`, which removes
+  *every* name. Only the demo images were affected; they were re-tagged by
+  id, and the script uses `podman untag IMAGE NAME`.
+- **Step 4: the shortcut sheet overflows short tabs.** On Networks (two
+  rows) the `?` sheet is taller than the popup and draws outside it. It was
+  shot on Containers, where it fits. The overflow is filed as a follow-up
+  (see Results).
+- **Step 4: no settings panel.** This Omarchy build (4.0.3) registers each
+  widget's settings schema but has no UI that renders it, so
+  `settings.png` was dropped (14 stills, not 15). The only working route is
+  `omarchy bar set <id> <key> <value> --json`. Without `--json`, booleans
+  are stored as the strings `"true"`/`"false"`, and the menu's
+  `settingsFor` ignores them. The docs claimed an "Omarchy settings panel"
+  (text inherited from upstream); step 7 corrects that.
+- **Step 4: prune wording.** The prune question names the category ("every
+  volume that no container is using"), not the individual items. The docs'
+  "naming what will go" is corrected in step 7.
