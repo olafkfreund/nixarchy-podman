@@ -76,7 +76,7 @@ Each rule records a real failure or a hard constraint:
 
 - **No symlinks anywhere in the repository.** `omarchy plugin add` clones this repo
   *as* the plugin folder, and `omarchy-plugin-validate` refuses any symlink inside
-  one. That is why `CLAUDE.md` imports this file instead of linking to it.
+  one. That is why `CLAUDE.md` imports `AGENTS.md` instead of linking to it.
 - **No hardcoded colours.** Use `Color.*` and `Style.*` tokens, so themes switch
   cleanly. `nix flake check` fails on `"#rrggbb"`.
 - **No `pacman` or `yay`**, not even in comments. nixarchy fails the rebuild on them.
