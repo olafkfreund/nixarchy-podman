@@ -1,5 +1,5 @@
 ---
-status: draft
+status: approved
 issue: 5
 author: olafkfreund
 ---
@@ -106,3 +106,13 @@ deploy through GitHub Actions from `master`, but no site has been built.
    minutes: it opens and closes surfaces, launches terminals, and restarts
    the shell. Should it run at a time you choose, and on which monitor or
    workspace? DP-2 on an empty workspace would be the default.
+
+## Decisions at approval
+
+The owner approved this intent with "use the recommendations":
+
+1. Video (MP4/WebM) on the site, plus one small GIF for the README.
+2. Captures live in `docs/img/`, with a total budget of about 8 MB.
+3. The site is a landing page plus a manual section built from
+   `docs/usage.md`, with the sidebar layout nixarchy uses.
+4. The capture session runs on an empty workspace on DP-2.
