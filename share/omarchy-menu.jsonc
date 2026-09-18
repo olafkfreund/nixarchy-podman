@@ -1,0 +1,14 @@
+// Paste these rows into ~/.config/omarchy/extensions/omarchy-menu.jsonc,
+// inside its top-level { }. Omarchy reloads the file on save.
+//
+// "apps.podman" puts Podman under Apps in the Omarchy menu (Super+Alt+Space);
+// search for podman, containers or docker from anywhere in the menu.
+{
+  "apps.podman": {
+    "icon": "",
+    "label": "Podman",
+    "description": "Containers, images, volumes and networks · Super+Alt+O",
+    "aliases": ["podman", "containers", "docker", "images", "volumes", "networks"],
+    "action": "omarchy-shell shell toggle nixarchy.podman '{}'"
+  }
+}

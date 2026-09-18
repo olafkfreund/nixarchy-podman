@@ -1,13 +1,22 @@
-# OmaPodman
+# nixarchy.podman
 
-A complete, native Podman manager for the [Omarchy](https://omarchy.org/) shell.
+A native Podman manager for the [Omarchy](https://omarchy.org/) shell, packaged for NixOS
+and [nixarchy](https://github.com/olafkfreund/nixarchy).
 
-OmaPodman lives in your Omarchy status bar and gives you containers, images, volumes and
-networks on four tabs — without ever opening a terminal, and without ever reaching for the
-mouse if you would rather not.
+Containers, images, volumes and networks on four tabs, without opening a terminal and
+without reaching for the mouse if you would rather not. There are two ways in, with the
+same tabs and the same keys:
 
-It is a Podman port of [OmaDocker](https://github.com/kayooliveira/omadocker), rebuilt
-against Podman's own CLI output rather than Docker's.
+- **The bar popup.** Click the Podman glyph in the bar. The glyph brightens while
+  something is running and turns red when a container needs attention.
+- **The full-screen menu.** Pick **Podman** in the Omarchy menu (Super+Alt+Space), or
+  press your own bind. It is larger, holds the keyboard while it is up, and does not need
+  the widget to be in the bar.
+
+This is a fork of [OmaPodman](https://github.com/i228808/omapodman) by Abdullah Mansoor,
+itself a Podman port of [OmaDocker](https://github.com/kayooliveira/omadocker). The fork
+adds the flake, the menu surface, and a fix so Podman failures show as errors instead of
+an empty list.
 
 ## What it does
 
@@ -25,13 +34,13 @@ reclaimable, straight from `podman system df`. One button — or the `p` key —
 always asks first, naming exactly what is about to go.
 
 **Getting out of your way when it goes wrong** — Podman refuses plenty of reasonable-looking
-requests ("volume is being used", "image is in use"). OmaPodman shows you its reason
+requests ("volume is being used", "image is in use"). It shows you Podman's reason
 verbatim instead of failing silently.
 
 ## Keyboard
 
-Everything in the panel is reachable from the keyboard. Press `?` inside the panel for this
-same list.
+Everything in both surfaces is reachable from the keyboard, with the same keys. Press `?`
+inside either for this same list.
 
 ### Moving around
 
@@ -43,6 +52,7 @@ same list.
 | `/` | Jump into the filter box |
 | `k` `↑` | From the first row, step back up into the filter |
 | `esc` | Leave the filter, then close the panel |
+| `tab` | Next bar panel, from the popup; next tab, in the full-screen menu |
 
 ### Containers
 
@@ -76,36 +86,103 @@ Both always ask first.
 Clicking works everywhere too: a row copies its identifier, the buttons at its right edge do
 what their tooltips say, and a project header starts or stops the whole project.
 
-## Installation
+## Installation on NixOS (nixarchy)
 
-```bash
-omarchy plugin add https://github.com/i228808/omapodman
+Add the flake as an input of your system flake:
+
+```nix
+inputs.nixarchy-podman = {
+  url = "github:olafkfreund/nixarchy-podman";
+  inputs.nixpkgs.follows = "nixpkgs";
+};
 ```
 
-Then add it to your bar layout, either via `~/.config/omarchy/shell.json` or the CLI:
+Then install the plugin where you configure nixarchy (the same place as
+`programs.nixarchy.enable`), and make sure Podman itself is there:
+
+```nix
+programs.nixarchy.plugins."nixarchy.podman".src =
+  inputs.nixarchy-podman.packages.${pkgs.stdenv.hostPlatform.system}.default;
+
+virtualisation.podman.enable = true;              # nixarchy only turns it on with services.boxes
+environment.systemPackages = [ pkgs.podman-tui ]; # optional, for the `d` key
+```
+
+Rebuild with `nixos-rebuild switch`, then enable the plugin once. Enabling is runtime
+state in `shell.json`, which nixarchy leaves alone on purpose:
 
 ```bash
-omarchy bar move abdullahmansoor.omapodman --section right
+omarchy plugin enable nixarchy.podman
+```
+
+nixarchy validates the plugin at build time and links it into
+`~/.config/omarchy/plugins/nixarchy.podman`. Enabling also places the widget in the right
+section of the bar. To put it somewhere else:
+
+```bash
+omarchy bar move nixarchy.podman --section left
+```
+
+### Coming from OmaPodman
+
+Remove the old install first. nixarchy will not replace a real directory, and the old
+widget would stay in your bar under its old id:
+
+```bash
+omarchy plugin disable abdullahmansoor.omapodman
+rm -rf ~/.config/omarchy/plugins/abdullahmansoor.omapodman
+```
+
+Settings do not carry over, because they belong to the old id.
+
+### Without Nix
+
+```bash
+omarchy plugin add https://github.com/olafkfreund/nixarchy-podman
+omarchy plugin enable nixarchy.podman   # also places the widget in the bar
+```
+
+## The Omarchy menu and a key
+
+Paste the row from [`share/omarchy-menu.jsonc`](share/omarchy-menu.jsonc) into
+`~/.config/omarchy/extensions/omarchy-menu.jsonc`. Omarchy reloads the file on save.
+**Podman** then appears under Apps, and searching for podman, containers or docker finds
+it.
+
+For a key of its own, add this to `~/.config/hypr/bindings.lua`:
+
+```lua
+o.bind("SUPER + ALT + O", "Podman", "omarchy-shell shell toggle nixarchy.podman '{}'")
+```
+
+The menu opens on the tab you configured. To open it on a particular tab, pass one:
+
+```bash
+omarchy-shell shell toggle nixarchy.podman '{"tab":"volumes"}'
 ```
 
 ## Removal
 
 ```bash
-omarchy plugin remove abdullahmansoor.omapodman
+omarchy plugin disable nixarchy.podman
 ```
 
-This disables the widget and deletes `~/.config/omarchy/plugins/abdullahmansoor.omapodman`.
-It touches nothing outside that directory — no host config, and no containers, images,
-volumes or networks it was showing.
+Then drop the `programs.nixarchy.plugins."nixarchy.podman"` line and rebuild, or run
+`omarchy plugin remove nixarchy.podman` if you installed without Nix. Remove the row from
+`omarchy-menu.jsonc` too. Nothing else is touched: no host config, and no containers,
+images, volumes or networks.
 
 ## Requirements
 
-- [Podman](https://podman.io/docs/installation), running rootless. Podman needs no daemon
-  and no group membership to use from the CLI — if `podman ps` already works in your
-  terminal without `sudo`, the panel will work too.
-- `wl-copy`, for the copy actions.
-- A terminal, for logs and shells — OmaPodman uses whatever `omarchy-launch-tui` picks.
+- [Podman](https://podman.io/docs/installation), running rootless. It needs no daemon and
+  no group membership: if `podman ps` works in your terminal without `sudo`, the plugin
+  works too. On NixOS, `virtualisation.podman.enable = true` covers it, and normal users
+  get subuid/subgid ranges by default.
+- `wl-copy`, for the copy actions. It ships with Omarchy.
+- A terminal for logs and shells. The plugin uses whatever `omarchy-launch-tui` picks.
 - [podman-tui](https://github.com/containers/podman-tui), optional, for the `d` key.
+
+Every command is run by name from `PATH`; nothing is wrapped or bundled.
 
 ## Settings
 
@@ -120,20 +197,21 @@ Everything below is per-instance, from the Omarchy settings panel or `shell.json
 | Measure what each volume costs | on | Off keeps the volume list instant and leaves per-volume sizes blank. The reclaimable total still works. |
 | Hide the bar icon when empty | off | On removes the button until Podman has something to show. |
 
+The full-screen menu reads the same settings from the bar widget's entry each time it
+opens. The one exception is hiding the bar icon, which has no meaning in the menu.
+
 ## IPC
 
 ```bash
-omarchy shell abdullahmansoor.omapodman toggle
-omarchy shell abdullahmansoor.omapodman tab volumes
-omarchy shell abdullahmansoor.omapodman refresh
-omarchy shell abdullahmansoor.omapodman stopAll
+omarchy-shell shell toggle nixarchy.podman '{}'     # the full-screen menu
+omarchy shell nixarchy.podman.bar toggle            # the bar popup
+omarchy shell nixarchy.podman.bar tab volumes
+omarchy shell nixarchy.podman.bar refresh
+omarchy shell nixarchy.podman.bar stopAll
 ```
 
-Handy for a Hyprland bind:
-
-```
-bind = SUPER CTRL, P, exec, omarchy shell abdullahmansoor.omapodman toggle
-```
+With several monitors, the bar popup's IPC target reaches one monitor's bar only. Use
+the menu for a key bind.
 
 ## Notes on the Docker → Podman port
 
@@ -157,24 +235,42 @@ A couple of things are genuinely different rather than merely reformatted:
 
 ## Development
 
-Clone into your Omarchy plugins directory and the shell picks it up:
-
 ```bash
-git clone https://github.com/i228808/omapodman ~/.config/omarchy/plugins/abdullahmansoor.omapodman
+nix flake check   # the Model tests, plus the plugin's shape
+nix build         # the plugin folder, exactly as nixarchy links it
 ```
 
-Everything that is not drawing is in `Model.js` — parsing Podman's output, deciding what is
-unused, sorting, sectioning, building rows, and building the commands. It is a plain
-`.pragma library` with no QML in it, so it runs under Node:
+`nix flake check` runs the Model tests and checks the plugin's shape: the manifest and
+its entry points, no symlinks, no pacman/yay, and no hardcoded colours. To iterate on a
+live shell, link the checkout into place and restart the shell:
+
+```bash
+ln -s "$PWD" ~/.config/omarchy/plugins/nixarchy.podman
+omarchy-restart-shell
+```
+
+Everything that is not drawing lives in `Model.js`: parsing Podman's output, deciding what
+is unused, sorting, sectioning, building rows and commands, and reading the menu's
+settings. It is a plain `.pragma library` that runs under Node:
 
 ```bash
 node tests/run.js
 ```
 
-The QML on top of it is four files: `Panel.qml` owns state and processes, `TabStrip.qml` is
-the tab bar, `ResourceList.qml` draws whichever tab is showing, and `ShortcutSheet.qml` is
-the `?` overlay.
+The QML:
+
+| File | Role |
+| --- | --- |
+| `PodmanState.qml` | Data, polling and every Podman command. One per surface; it polls only while its surface is open (the bar also keeps a slow poll for its glyph). |
+| `PodmanView.qml` | Tabs, cursor, filter, confirmations, keys. Shared by both surfaces. |
+| `Panel.qml` | The bar widget: glyph plus popup. |
+| `Menu.qml` | The full-screen menu. |
+| `TabStrip.qml` | The tab bar. |
+| `ResourceList.qml` | The rows of the current tab. |
+| `ShortcutSheet.qml` | The `?` overlay. |
+
+Changes go through `intent/`, `spec/` and `plan/`, as in the other nixarchy plugins.
 
 ## License
 
-MIT License
+MIT. See [LICENSE](LICENSE). OmaPodman is by Abdullah Mansoor.
