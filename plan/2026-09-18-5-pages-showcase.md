@@ -143,3 +143,16 @@ page.
 - The shoot itself is undone by step 6. If it is interrupted,
   `docs/capture.sh --teardown` removes every `demo-*` object, and the
   config backups sit in the scratch directory.
+
+## Implementation record
+
+- **Step 1: wordmark width.** With trailing spaces stripped, the generated
+  wordmark is 73 columns, not the 76 the spec assumed. `style.css` scales
+  nixarchy's clamp by 92/73, to `clamp(0.38rem, 1.32vw, 1.11rem)`.
+- **Step 1: layout headers.** The source headers in the copied layouts are
+  Liquid comments, not HTML comments, so nothing is emitted before
+  `<!DOCTYPE>`.
+- **Step 1: links in `usage.md`.** Its two `../` links (README, menu
+  snippet) became absolute GitHub URLs. The site publishes only `docs/`, so
+  relative links out of it would 404 there. The absolute URLs work on both
+  github.com and the site.

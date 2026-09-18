@@ -1,7 +1,13 @@
+---
+layout: manual
+title: The manual
+permalink: /usage/
+---
+
 # Using nixarchy.podman
 
 A walkthrough, from installing it to fixing the usual problems. For the reference
-tables (every key, every setting, IPC), see the [README](../README.md).
+tables (every key, every setting, IPC), see the [README](https://github.com/olafkfreund/nixarchy-podman#readme).
 
 ## What it is
 
@@ -108,7 +114,7 @@ no size for them.
 ### Add it to the Omarchy menu
 
 Open `~/.config/omarchy/extensions/omarchy-menu.jsonc` and paste the `"apps.podman"`
-row from [`share/omarchy-menu.jsonc`](../share/omarchy-menu.jsonc) inside its top-level
+row from [`share/omarchy-menu.jsonc`](https://github.com/olafkfreund/nixarchy-podman/blob/master/share/omarchy-menu.jsonc) inside its top-level
 `{ }`. Mind the comma between rows. Omarchy reloads the file when you save.
 
 Now press **Super+Alt+Space** and type `podman`. The **Podman** row is under Apps;
