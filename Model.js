@@ -1197,3 +1197,27 @@ function errorText(raw) {
   }
   return ""
 }
+
+// The menu entry point is not a bar widget, so it has no setting(). It reads
+// the widget's entry out of the bar layout instead: `bar.layout.<region>[]`,
+// where an entry is either a bare id or {id, ...settings}. Only keys the
+// defaults know about, carrying the same type, get through.
+function settingsFor(barConfig, id, defaults) {
+  var result = {}
+  for (var key in defaults) result[key] = defaults[key]
+  if (!barConfig || typeof barConfig !== "object") return result
+  var layout = barConfig.layout && typeof barConfig.layout === "object" ? barConfig.layout : barConfig
+  var regions = ["left", "center", "right"]
+  for (var r = 0; r < regions.length; r++) {
+    var entries = Array.isArray(layout[regions[r]]) ? layout[regions[r]] : []
+    for (var i = 0; i < entries.length; i++) {
+      var entry = entries[i]
+      if (!entry || typeof entry !== "object" || entry.id !== id) continue
+      for (var k in result) {
+        if (k in entry && typeof entry[k] === typeof result[k]) result[k] = entry[k]
+      }
+      return result
+    }
+  }
+  return result
+}
