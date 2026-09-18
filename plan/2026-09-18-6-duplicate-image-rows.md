@@ -82,3 +82,31 @@ Each step is one commit on `fix/6-duplicate-image-rows`, citing
 
 Revert the merge commit. The change is confined to `Model.js` and one test
 file.
+
+## Implementation record
+
+No deviations from the steps.
+
+- **Step 1.** Before the fix, 7 of the 8 new tests failed and the 125
+  existing ones passed. The untagged-image test passes on old code too,
+  because untagged rows were already keyed by id.
+- **Step 2.** All 133 tests pass. The intent's reproduction now gives
+  "want 2 rows, got 2", where it gave 3.
+- **Step 3 (live, p620).** The new build was installed and `demo/tools` given
+  a second tag. Results:
+  - **Menu.** The Images tab (filtered to `demo`) showed exactly
+    `tools:latest`, `tools:second` and `shop:latest`, still correct after a
+    resource refresh, a tab switch and a re-filter.
+  - **Remove.** `x` on `:second` asked "Remove image
+    localhost/demo/tools:second?". Confirming untagged only that tag;
+    `tools:latest` kept id `47cba2222278`, and the list re-sorted to two
+    rows.
+  - **Refusal.** `x` on the in-use `shop` showed Podman's refusal verbatim,
+    and the image stayed.
+  - **Popup.** After re-tagging, it showed the same correct rows.
+  - **Cleanup.** The Podman snapshot is identical before and after, and
+    `shell.json` is unchanged.
+- **Step 4.** `nix flake check` passes, and the package is ten files.
+- **Installed copy.** `~/.config/omarchy/plugins/nixarchy.podman` now holds
+  this branch's build. It is still a real directory, which the host-wiring
+  follow-up must remove first.
