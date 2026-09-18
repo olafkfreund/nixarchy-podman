@@ -13,6 +13,19 @@ There are two ways in, with the same tabs and the same keys:
   larger, holds the keyboard while it is up, and works even if the widget is not in the
   bar.
 
+## Requirements
+
+- **Podman, running rootless.** It needs no daemon and no group membership: if
+  `podman ps` works in a terminal without `sudo`, the plugin works too. On NixOS,
+  `virtualisation.podman.enable = true` covers it, and normal users get subuid/subgid
+  ranges by default.
+- **`wl-copy`**, for the copy keys. It ships with Omarchy.
+- **A terminal** for logs and shells. The plugin uses whatever `omarchy-launch-tui`
+  picks.
+- **[podman-tui](https://github.com/containers/podman-tui)**, optional, for the `d` key.
+
+Every command is run by name from `PATH`; nothing is wrapped or bundled.
+
 ## Install on NixOS (nixarchy)
 
 1. Add the flake to your system flake's inputs:
@@ -44,7 +57,11 @@ There are two ways in, with the same tabs and the same keys:
    omarchy plugin enable nixarchy.podman
    ```
 
-   This also places the widget in the right section of the bar.
+   This also places the widget in the right section of the bar. To put it elsewhere:
+
+   ```bash
+   omarchy bar move nixarchy.podman --section left
+   ```
 
 **Check it worked.** A Podman glyph is in the bar, and the plugin shows as enabled:
 

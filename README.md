@@ -5,7 +5,7 @@ and [nixarchy](https://github.com/olafkfreund/nixarchy).
 
 Containers, images, volumes and networks on four tabs, without opening a terminal and
 without reaching for the mouse if you would rather not. There are two ways in, with the
-same tabs and the same keys:
+same tabs and the same keys (new here? start with [the usage guide](docs/usage.md)):
 
 - **The bar popup.** Click the Podman glyph in the bar. The glyph brightens while
   something is running and turns red when a container needs attention.
@@ -86,103 +86,33 @@ Both always ask first.
 Clicking works everywhere too: a row copies its identifier, the buttons at its right edge do
 what their tooltips say, and a project header starts or stops the whole project.
 
-## Installation on NixOS (nixarchy)
+## Installation
 
-Add the flake as an input of your system flake:
+On NixOS with nixarchy, add the flake as an input and install the plugin next to
+`programs.nixarchy.enable`:
 
 ```nix
 inputs.nixarchy-podman = {
   url = "github:olafkfreund/nixarchy-podman";
   inputs.nixpkgs.follows = "nixpkgs";
 };
-```
 
-Then install the plugin where you configure nixarchy (the same place as
-`programs.nixarchy.enable`), and make sure Podman itself is there:
-
-```nix
 programs.nixarchy.plugins."nixarchy.podman".src =
   inputs.nixarchy-podman.packages.${pkgs.stdenv.hostPlatform.system}.default;
-
-virtualisation.podman.enable = true;              # nixarchy only turns it on with services.boxes
-environment.systemPackages = [ pkgs.podman-tui ]; # optional, for the `d` key
+virtualisation.podman.enable = true;
 ```
 
-Rebuild with `nixos-rebuild switch`, then enable the plugin once. Enabling is runtime
-state in `shell.json`, which nixarchy leaves alone on purpose:
+Rebuild, then run `omarchy plugin enable nixarchy.podman` once; that also places the
+widget in the bar. Without Nix, run `omarchy plugin add
+https://github.com/olafkfreund/nixarchy-podman` and then enable it the same way.
 
-```bash
-omarchy plugin enable nixarchy.podman
-```
+**[The usage guide](docs/usage.md)** covers the rest:
 
-nixarchy validates the plugin at build time and links it into
-`~/.config/omarchy/plugins/nixarchy.podman`. Enabling also places the widget in the right
-section of the bar. To put it somewhere else:
-
-```bash
-omarchy bar move nixarchy.podman --section left
-```
-
-### Coming from OmaPodman
-
-Remove the old install first. nixarchy will not replace a real directory, and the old
-widget would stay in your bar under its old id:
-
-```bash
-omarchy plugin disable abdullahmansoor.omapodman
-rm -rf ~/.config/omarchy/plugins/abdullahmansoor.omapodman
-```
-
-Settings do not carry over, because they belong to the old id.
-
-### Without Nix
-
-```bash
-omarchy plugin add https://github.com/olafkfreund/nixarchy-podman
-omarchy plugin enable nixarchy.podman   # also places the widget in the bar
-```
-
-## The Omarchy menu and a key
-
-Paste the row from [`share/omarchy-menu.jsonc`](share/omarchy-menu.jsonc) into
-`~/.config/omarchy/extensions/omarchy-menu.jsonc`. Omarchy reloads the file on save.
-**Podman** then appears under Apps, and searching for podman, containers or docker finds
-it.
-
-For a key of its own, add this to `~/.config/hypr/bindings.lua`:
-
-```lua
-o.bind("SUPER + ALT + O", "Podman", "omarchy-shell shell toggle nixarchy.podman '{}'")
-```
-
-The menu opens on the tab you configured. To open it on a particular tab, pass one:
-
-```bash
-omarchy-shell shell toggle nixarchy.podman '{"tab":"volumes"}'
-```
-
-## Removal
-
-```bash
-omarchy plugin disable nixarchy.podman
-```
-
-Then drop the `programs.nixarchy.plugins."nixarchy.podman"` line and rebuild, or run
-`omarchy plugin remove nixarchy.podman` if you installed without Nix. Remove the row from
-`omarchy-menu.jsonc` too. Nothing else is touched: no host config, and no containers,
-images, volumes or networks.
-
-## Requirements
-
-- [Podman](https://podman.io/docs/installation), running rootless. It needs no daemon and
-  no group membership: if `podman ps` works in your terminal without `sudo`, the plugin
-  works too. On NixOS, `virtualisation.podman.enable = true` covers it, and normal users
-  get subuid/subgid ranges by default.
-- `wl-copy`, for the copy actions. It ships with Omarchy.
-- A terminal for logs and shells. The plugin uses whatever `omarchy-launch-tui` picks.
-- [podman-tui](https://github.com/containers/podman-tui), optional, for the `d` key.
-
-Every command is run by name from `PATH`; nothing is wrapped or bundled.
+- the requirements;
+- adding Podman to the Omarchy menu and binding Super+Alt+O;
+- moving from OmaPodman;
+- troubleshooting;
+- removal.
 
 ## Settings
 
@@ -269,7 +199,9 @@ The QML:
 | `ResourceList.qml` | The rows of the current tab. |
 | `ShortcutSheet.qml` | The `?` overlay. |
 
-Changes go through `intent/`, `spec/` and `plan/`, as in the other nixarchy plugins.
+Changes go through `intent/`, `spec/` and `plan/`, as in the other nixarchy plugins. AI agents
+(and people) working on the code should read [AGENTS.md](AGENTS.md) first: the layout,
+commands, live-testing steps and the rules this repo has learned the hard way.
 
 ## License
 
