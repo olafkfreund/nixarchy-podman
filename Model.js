@@ -162,6 +162,12 @@ function isContainerId(value) {
   return /^[A-Za-z0-9]{1,128}$/.test(String(value || ""))
 }
 
+// A tagged image's reference, as `podman rmi` takes it. Never starts with a
+// dash, so it can never be read as a flag.
+function isImageReference(value) {
+  return /^[A-Za-z0-9][A-Za-z0-9._\/:@-]{0,255}$/.test(String(value || ""))
+}
+
 function isVolumeName(value) {
   return /^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$/.test(String(value || ""))
 }
@@ -441,6 +447,9 @@ function normalizeImage(raw) {
   // A count Podman would not give us is treated as "in use": never invite
   // someone to delete an image on the strength of a number we don't have.
   image.inUse = containers !== 0
+  // Podman lists an image once per tag, all under one id. The reference tells
+  // the tags apart; an untagged image has only its id (issue #6).
+  image.rowId = untagged ? id : reference
   image.search = (image.name + " " + image.reference + " " + id).toLowerCase()
   return image
 }
@@ -873,7 +882,7 @@ function containerRow(container) {
 }
 
 function imageRow(image) {
-  var row = blankRow(image.id, image.id, "images")
+  var row = blankRow(image.rowId, image.rowId, "images")
   row.name = image.name
   row.subtitle = sanitize(join([
     image.dangling ? "untagged" : image.id,
@@ -1012,7 +1021,9 @@ function copyValue(kind, item) {
 
 function removeCommand(kind, id) {
   if (kind === "containers") return isContainerId(id) ? ["podman", "rm", id] : null
-  if (kind === "images") return isContainerId(id) ? ["podman", "rmi", id] : null
+  // By reference for a tagged row: Podman refuses `rmi <id>` on an image with
+  // more than one tag, and a row stands for one tag (issue #6).
+  if (kind === "images") return isContainerId(id) || isImageReference(id) ? ["podman", "rmi", id] : null
   if (kind === "volumes") return isVolumeName(id) ? ["podman", "volume", "rm", id] : null
   if (kind === "networks") return isContainerId(id) ? ["podman", "network", "rm", id] : null
   return null
@@ -1085,7 +1096,7 @@ function removeMessage(kind, item) {
 function itemById(items, id) {
   var list = items || []
   for (var i = 0; i < list.length; i++) {
-    if (list[i].id === id) return list[i]
+    if ((list[i].rowId || list[i].id) === id) return list[i]
   }
   return null
 }
@@ -1133,6 +1144,12 @@ function reconcilePlan(currentKeys, nextRows) {
       ops.push({ op: "insert", index: n, row: next[n] })
       keys.splice(n, 0, next[n].key)
     }
+  }
+  // Only a list holding duplicate keys gets here with rows to spare: the
+  // passes above keep every copy of a wanted key. Drop them, back to front.
+  for (var t = keys.length - 1; t >= next.length; t--) {
+    ops.push({ op: "remove", index: t })
+    keys.splice(t, 1)
   }
   return ops
 }

@@ -103,7 +103,8 @@ The popup has four tabs:
 - **Containers**, grouped by Compose project, running first, with live CPU and memory.
 - **Images, Volumes, Networks**, each split into **Unused** and **In use**, biggest
   first. Podman itself decides what counts as unused, so the list matches what a prune
-  would take.
+  would take. An image with several tags gets one row per tag, just as `podman images`
+  lists it.
 
 The footer says what the tab holds and, for images and volumes, how much of it is
 reclaimable. On Networks it gives the count and how many are unused; Podman reports
@@ -156,7 +157,7 @@ Both surfaces use the same keys. Press `?` inside either to see them all.
 | Get a shell inside it | `s` (running containers only) |
 | Copy its name | `n` |
 | Copy an id, or a volume's mount path | `c`; on Images, Volumes and Networks, `enter` does the same |
-| Remove one thing | `x`. It asks first, and **Cancel** is the default |
+| Remove one thing | `x`. It asks first, and **Cancel** is the default. On an image, `x` removes the tag under the cursor; the image goes when its last tag does |
 | Reclaim space on this tab | `p`, or the footer button. It asks first, saying what kind of thing will go |
 | Filter the list | `/`, then type. `↓` returns to the list; if nothing matches, it stays in the filter. The first `esc` clears the text, the second leaves the filter |
 | Refresh now | `u` |
