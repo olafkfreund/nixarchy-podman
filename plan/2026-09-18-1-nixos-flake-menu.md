@@ -317,7 +317,9 @@ Deviations from the steps above, each made in the commit that needed it
   menu was not confirmed: its search field did not move the selection with
   ↓ during the test.
 
-Found on this host, out of scope: rootless Podman's overlay storage reports
-missing layer links. `podman system df -v` exits 125, and new containers
-from `ubuntu:24.04` fail. Per-volume sizes stay blank here for that reason.
-The plugin is not the cause.
+Found on this host, out of scope: rootless Podman's overlay storage reported
+missing layer links. `podman system df -v` exited 125 and per-volume sizes
+stayed blank. The plugin was not the cause. After the store was repaired
+(same day), the plugin's own `system df -v` pipeline, pipefail included,
+exits 0. The menu's Volumes tab then showed every volume's size, biggest
+first, with the reclaimable total in the footer.
