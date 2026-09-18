@@ -29,6 +29,13 @@ Item {
 
   property var settings: ({})
 
+  // A full-screen surface is read from further away than a bar popup, so the
+  // whole view is drawn larger — the same factor nixarchy-pkg's menu uses.
+  // ponytail: one scale on the view rather than a size knob threaded through
+  // every font; revisit if the view ever needs different ratios per element.
+  readonly property real uiScale: 1.45
+  readonly property int viewWidth: Style.space(680)
+
   function focusedScreen() {
     var monitor = Hyprland.focusedMonitor
     var name = monitor ? String(monitor.name || "") : ""
@@ -115,8 +122,9 @@ Item {
 
     BorderSurface {
       id: card
-      width: Math.min(Style.space(720), Math.round(panel.width * 0.9))
-      height: Math.min(view.implicitHeight + card.contentTopInset + card.contentBottomInset,
+      width: Math.min(Math.round(root.viewWidth * root.uiScale) + card.contentLeftInset + card.contentRightInset,
+                      Math.round(panel.width * 0.9))
+      height: Math.min(Math.round(view.implicitHeight * root.uiScale) + card.contentTopInset + card.contentBottomInset,
                        Math.round(panel.height * 0.85))
       anchors.horizontalCenter: parent.horizontalCenter
       y: Math.max(Style.gapsOut, Math.round((panel.height - height) / 3))
@@ -127,20 +135,31 @@ Item {
 
       MouseArea { anchors.fill: parent; onClicked: {} }
 
-      PodmanView {
-        id: view
+      Item {
+        id: frame
         anchors.fill: parent
         anchors.topMargin: card.contentTopInset
         anchors.rightMargin: card.contentRightInset
         anchors.bottomMargin: card.contentBottomInset
         anchors.leftMargin: card.contentLeftInset
-        podman: podmanState
-        foreground: Color.foreground
-        fontFamily: Style.font.family
-        onCloseRequested: root.close()
-        // No neighbouring bar panel to hand over to: Tab walks the tabs.
-        onSwitchPanelRequested: function(direction) {
-          podmanState.setTab(Model.shiftTab(podmanState.tab, direction))
+        clip: true
+
+        PodmanView {
+          id: view
+          // Laid out at its natural size, then drawn uiScale times larger;
+          // input is mapped through the same transform, so clicks still land.
+          width: frame.width / root.uiScale
+          height: frame.height / root.uiScale
+          scale: root.uiScale
+          transformOrigin: Item.TopLeft
+          podman: podmanState
+          foreground: Color.foreground
+          fontFamily: Style.font.family
+          onCloseRequested: root.close()
+          // No neighbouring bar panel to hand over to: Tab walks the tabs.
+          onSwitchPanelRequested: function(direction) {
+            podmanState.setTab(Model.shiftTab(podmanState.tab, direction))
+          }
         }
       }
     }

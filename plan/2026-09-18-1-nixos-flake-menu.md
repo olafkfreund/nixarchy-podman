@@ -284,3 +284,8 @@ Deviations from the steps above, each made in the commit that needed it
   array-like object reproduces the case (it fails without the fix).
 - **Step 4, display name.** The popup title and tooltip read "Podman", to
   match the manifest `name`.
+- **Step 4, menu size (user request).** The menu card and its text are
+  drawn 1.45× larger: the same factor as nixarchy-pkg's full-screen menu, applied as one
+  `scale` on the PodmanView inside `Menu.qml` (laid out at `Style.space(680)`,
+  card sized to the scaled view). The bar popup is unchanged. Verified live:
+  text stays sharp, and a click on a tab lands through the transform.
