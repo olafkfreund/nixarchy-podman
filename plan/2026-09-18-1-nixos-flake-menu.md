@@ -254,3 +254,33 @@ it in `listProcess` in a scratch copy. The panel must show the
   Re-add the old checkout if you want it back.
 - Every step is its own commit, so a single step, such as the split, can be
   reverted on its own. Steps 1, 2, 6 and 7 do not depend on the split.
+
+## Implementation record
+
+Deviations from the steps above, each made in the commit that needed it
+(steps 1-3 were recorded late, in the step 4 commit):
+
+- **Step 1.** With pipefail, listing output larger than the `head -c` cap
+  now ends in SIGPIPE and counts as a failure, where before it was cut off
+  mid-JSON and half-parsed. Accepted: neither result was usable.
+- **Step 2.** The bar regions live under `bar.layout.{left,center,right}`,
+  not directly on `bar` (checked in `~/.config/omarchy/shell.json` and
+  `shell.qml:116`). `settingsFor` reads `barConfig.layout` and falls back to
+  `barConfig` itself; bare-string entries are skipped.
+- **Step 3.** Verified live through ai-mirror rather than by hand. An
+  apparent focus regression turned out to be a second popup that a stray IPC
+  toggle had opened on another monitor; the same key sequence matched
+  `master` exactly.
+- **Step 4, closing.** `Menu.close()` only sets `opened = false`; it does not
+  run `omarchy-shell shell hide`. The host decides what `toggle` means from
+  `loader.item.opened` (`shell.qml:1217`), so a local close is enough, and
+  `keepLoaded: true` means the stale `openPanelIds` entry changes nothing.
+  Verified: Esc, scrim click and external toggle all close, and the next
+  toggle reopens.
+- **Step 4, settings bug.** In QML, lists read through a QObject `var`
+  property are Qt sequence wrappers: `Array.isArray` is false for them. So
+  `settingsFor` silently returned the defaults inside the shell while its
+  Node tests passed. It now accepts any list-like value, and a test with an
+  array-like object reproduces the case (it fails without the fix).
+- **Step 4, display name.** The popup title and tooltip read "Podman", to
+  match the manifest `name`.

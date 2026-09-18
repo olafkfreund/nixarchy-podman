@@ -11,8 +11,8 @@ import "Model.js" as Model
 Panel {
   id: root
 
-  moduleName: "abdullahmansoor.omapodman"
-  ipcTarget: "abdullahmansoor.omapodman"
+  moduleName: "nixarchy.podman"
+  ipcTarget: "nixarchy.podman.bar"
   manageIpc: false
 
   readonly property int refreshIntervalSec: Math.max(5, Number(setting("refreshIntervalSec", 15)))
@@ -75,7 +75,7 @@ Panel {
     active: podmanState.counts.alerting > 0 || podmanState.counts.running > 0
     useActiveColor: true
     activeColor: podmanState.counts.alerting > 0 ? Color.urgent : Color.accent
-    tooltipText: "OmaPodman · " + Model.summaryText(podmanState.containers, podmanState.daemonReachable)
+    tooltipText: "Podman · " + Model.summaryText(podmanState.containers, podmanState.daemonReachable)
 
     onPressed: function(b) {
       if (b === Qt.MiddleButton) podmanState.refresh()

@@ -33,6 +33,13 @@ test("settingsFor ignores values of the wrong type and keys it does not know", (
   ok(!("bogus" in got))
 })
 
+test("settingsFor reads Qt sequence wrappers, which are not JS arrays", () => {
+  // What QML hands over for a list read through a QObject property.
+  const wrapped = { length: 2, 0: { id: "other" }, 1: { id: ID, showStats: false } }
+  ok(!Array.isArray(wrapped))
+  eq(Model.settingsFor({ layout: { right: wrapped } }, ID, defaults()).showStats, false)
+})
+
 test("settingsFor never mutates the defaults it is given", () => {
   const d = defaults()
   Model.settingsFor({ layout: { right: [{ id: ID, showStats: false }] } }, ID, d)

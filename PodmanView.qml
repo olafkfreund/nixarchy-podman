@@ -244,7 +244,7 @@ FocusScope {
         spacing: Style.spacing.panelGap
 
         PanelHero {
-          title: "OmaPodman"
+          title: "Podman"
           meta: Model.summaryText(root.podman.containers, root.podman.daemonReachable)
           foreground: root.foreground
           fontFamily: root.fontFamily

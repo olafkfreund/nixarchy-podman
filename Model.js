@@ -1209,7 +1209,10 @@ function settingsFor(barConfig, id, defaults) {
   var layout = barConfig.layout && typeof barConfig.layout === "object" ? barConfig.layout : barConfig
   var regions = ["left", "center", "right"]
   for (var r = 0; r < regions.length; r++) {
-    var entries = Array.isArray(layout[regions[r]]) ? layout[regions[r]] : []
+    // Not Array.isArray: read through a QObject property, the layout's lists
+    // are Qt sequence wrappers, which have a length but are not JS arrays.
+    var list = layout[regions[r]]
+    var entries = list && typeof list === "object" && typeof list.length === "number" ? list : []
     for (var i = 0; i < entries.length; i++) {
       var entry = entries[i]
       if (!entry || typeof entry !== "object" || entry.id !== id) continue
