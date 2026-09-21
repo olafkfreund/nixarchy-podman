@@ -79,7 +79,7 @@ test("health is only read while the container is actually up", () => {
 
   const crashed = container({
     State: "exited",
-    Status: "Exited (137) 3 days ago",
+    Status: "Exited (1) 3 days ago",
     HealthStatus: "unhealthy"
   })
   eq(crashed.failing, true)

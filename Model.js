@@ -28,6 +28,11 @@ var UNGROUPED = "\\x00ungrouped"
 
 var UP_STATES = ["running", "restarting", "removing"]
 
+// What a container you stopped exits with: 143 after SIGTERM, 137 when it
+// ignored that and was killed at the stop timeout. Not failures (#10). An OOM
+// kill is also 137 and now reads as a clean stop, accepted at intent approval.
+var STOP_EXIT_CODES = [137, 143]
+
 var MAX_FIELD = 64
 
 // ---------------------------------------------------------------- tabs
@@ -355,7 +360,7 @@ function exitCode(status) {
 function isFailing(container) {
   if (!container) return false
   if (container.up) return container.health === "unhealthy"
-  return container.exitCode > 0
+  return container.exitCode > 0 && STOP_EXIT_CODES.indexOf(container.exitCode) === -1
 }
 
 function isAlerting(container) {
@@ -881,7 +886,8 @@ function containerRow(container) {
   row.up = container.up
   row.failing = container.failing
   row.restarting = container.state === "restarting"
-  row.unhealthy = container.health === "unhealthy"
+  // A stopped container's last health check is history, not a warning.
+  row.unhealthy = container.up && container.health === "unhealthy"
   // Only a container that is already down. A row can be a few seconds stale,
   // and a stale row must never be the thing that deletes a live container.
   row.removable = !container.up

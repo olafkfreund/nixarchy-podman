@@ -127,6 +127,9 @@ them to see them fail, then fix. Put the failing output in the commit body.
      running one stays true.
    - Change, `Model.js`: `STOP_EXIT_CODES`, `isFailing`, `containerRow`.
    - Verify: fail first, then green.
+   - Deviation in step 3: the inherited test "health is only read while the
+     container is actually up" used `Exited (137)` as its crash. It now uses
+     `Exited (1)`, which keeps what it tests under the approved decision.
 4. **Bug 5: first move.**
    - Change: `tests/model/cursor.test.js` (new) covers
      `nextCursor(false,0,1,5).index === 0`, `nextCursor(true,0,1,5).index === 1`,
