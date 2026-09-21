@@ -73,6 +73,15 @@ Bugs are numbered as in the intent.
    No speculative guards, and no rebuild-on-mismatch. If it doesn't reproduce
    within the time box, record what was tried on #10 and leave it open.
 
+   Deviation in step 8: the cause was neither (a) nor (b). A depth counter showed
+   no nested `sync()`, and the log had no ListModel warning. Logging the short
+   case gave `count=0 next=4 nextKeys=[null,null,null,null]`: on Containers →
+   Images, the view saw the new tab with the old tab's containers for one
+   binding pass. `imageRow` keyed them by `rowId`, which containers lack, so
+   `reconcilePlan` matched `undefined === undefined` and inserted nothing. Fixed
+   at the source: `rowsForSections` builds each item with its own `kind`'s
+   builder. A Node test covers it. No guard in `ResourceList.qml`.
+
 **Rejected** (don't reintroduce):
 
 - sniffing the Podman version for `-a`;

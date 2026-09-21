@@ -947,15 +947,18 @@ var ROW_BUILDERS = {
   networks: networkRow
 }
 
+// Each item is built by its own kind, not the tab's: during a tab switch the
+// view can see the new tab with the old tab's items for one binding pass, and
+// an image builder handed a container makes rows with no key (#10).
 function rowsForSections(sections, kind) {
-  var build = ROW_BUILDERS[kind] || containerRow
+  var fallback = ROW_BUILDERS[kind] || containerRow
   var rows = []
   var list = sections || []
   for (var i = 0; i < list.length; i++) {
     var section = list[i]
     var items = section.items || section.containers || []
     for (var j = 0; j < items.length; j++) {
-      var row = build(items[j])
+      var row = (ROW_BUILDERS[items[j].kind] || fallback)(items[j])
       row.sectionKey = section.key
       row.sectionTitle = j === 0 ? section.title : ""
       row.sectionTally = section.tally

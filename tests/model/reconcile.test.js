@@ -163,3 +163,15 @@ test("ROW_FIELDS covers every mutable field a row carries", () => {
   eq(Object.keys(row).sort(), covered,
     "a field that is neither identity nor in ROW_FIELDS would go stale")
 })
+
+// On a tab switch the view can, for one binding pass, see the new tab with the
+// old tab's items. Rows built then must still have real keys, or the reconcile
+// sees undefined === undefined, keeps an empty model, and sync() throws on
+// rowModel.get(n) (#10: Containers -> Images, "Cannot read property 'kind'").
+test("rows built for the wrong tab still carry each item's real key", () => {
+  const containers = [make("web", "shop"), make("db", "shop")]
+  const rows = Model.rowsForSections(Model.usageSectionsFor(containers), "images")
+  eq(rows.map(r => r.key).sort(), ["db", "web"])
+  ok(rows.every(r => r.kind === "containers"))
+  eq(apply([], rows).model.length, 2)
+})
