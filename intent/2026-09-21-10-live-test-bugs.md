@@ -1,5 +1,5 @@
 ---
-status: draft
+status: approved
 issue: 10
 author: olafkfreund
 ---
@@ -129,3 +129,13 @@ real `podman` output, not inferred from reading code.
    Listing the names, or the count, in the dialog would make that much harder to
    do by accident. This is a new feature rather than a fix, so I recommend a
    separate issue.
+
+## Decisions at approval
+
+Approved without separate answers; the recommendations stand:
+1. Exit codes 137 and 143 count as a clean stop, not a failure.
+2. If the menu's stale settings are a host defect, correct the docs and report it
+   to omarchy rather than reading `shell.json` from the plugin.
+3. Of the minor items, only the stale `Model.js:1032` comment and the unhealthy mark
+   on stopped containers join this task; the rest go to a separate issue.
+4. A prune dialog that names what it removes is a separate issue.
