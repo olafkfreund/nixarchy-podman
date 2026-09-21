@@ -39,6 +39,12 @@ Bugs are numbered as in the intent.
    - The popup is unchanged.
    - If the log shows `Binding loop detected`, compute `chromeHeight` from the
      non-list children instead, and record that as a deviation.
+   - Deviation in step 5 (the fallback above, taken): on razer the first version
+     logged `Binding loop detected for property "chromeHeight"` and for the
+     ListView's `height`. `chromeHeight` is now the sum of `hero`, `tabStrip`,
+     `filterField`, `separator` and `footer`, plus `emptyState` and `errorLine`
+     when visible, plus `Style.spacing.panelGap` times the gaps. Re-checked live:
+     footer visible on Volumes (9) and Images (12), and the log is clean.
 4. **Stopped on purpose.**
    - `var STOP_EXIT_CODES = [137, 143]` sits next to `UP_STATES`. `isFailing`
      treats those codes like 0. The comment says an OOM kill now looks like a

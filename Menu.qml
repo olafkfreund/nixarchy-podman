@@ -153,6 +153,11 @@ Item {
           scale: root.uiScale
           transformOrigin: Item.TopLeft
           podman: podmanState
+          // The card may take 85% of the screen; the list gets what the rest of
+          // the view leaves of that, so the footer is never clipped (#10).
+          listMaxHeight: Math.max(Style.space(120), Math.min(Style.space(560),
+            Math.floor((panel.height * 0.85 - card.contentTopInset - card.contentBottomInset) / root.uiScale)
+            - view.chromeHeight))
           foreground: Color.foreground
           fontFamily: Style.font.family
           onCloseRequested: root.close()
