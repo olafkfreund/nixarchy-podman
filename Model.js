@@ -1131,6 +1131,12 @@ function clampCursor(cursorIndex, total) {
   return cursorIndex
 }
 
+// The first move after opening only shows the cursor where it already points,
+// so j then Enter acts on the top row, not the second (#10).
+function nextCursor(active, index, delta, count) {
+  return { index: clampCursor(active ? index + delta : index, count) }
+}
+
 // ---------------------------------------------------------------- reconcile
 
 function reconcilePlan(currentKeys, nextRows) {

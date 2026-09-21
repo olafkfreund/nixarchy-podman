@@ -166,9 +166,9 @@ FocusScope {
       filterField.forceActiveFocus()
       return
     }
+    cursorIndex = Model.nextCursor(cursorActive, cursorIndex, delta, rows.length).index
     cursorActive = true
     cursorFromKeyboard = true
-    cursorIndex = Model.clampCursor(cursorIndex + delta, rows.length)
   }
 
   function setCursor(index) {
