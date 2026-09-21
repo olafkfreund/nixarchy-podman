@@ -101,6 +101,8 @@ middle-click to refresh.
 The popup has four tabs:
 
 - **Containers**, grouped by Compose project, running first, with live CPU and memory.
+  A red row is a container that failed, or a running one whose health check fails. A
+  container you stopped stays dim, even though Podman reports its exit as 137 or 143.
 - **Images, Volumes, Networks**, each split into **Unused** and **In use**, biggest
   first. Podman itself decides what counts as unused, so the list matches what a prune
   would take. An image with several tags gets one row per tag, just as `podman images`
