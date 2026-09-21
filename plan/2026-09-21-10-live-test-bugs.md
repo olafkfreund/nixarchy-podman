@@ -1,5 +1,5 @@
 ---
-status: draft
+status: approved
 issue: 10
 spec: spec/2026-09-21-10-live-test-bugs.md
 ---
