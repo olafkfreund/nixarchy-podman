@@ -1029,8 +1029,8 @@ function removeCommand(kind, id) {
   return null
 }
 
-// Deliberately without -f on every one of these. A stale row must never be
-// able to destroy something that came back to life since the last refresh.
+// Only what nothing uses: no --all on containers or volumes, and never a forced
+// rm/rmi. The -f here only skips Podman's own prompt; the panel has asked.
 var PRUNE = {
   containers: {
     label: "Remove stopped",
@@ -1044,7 +1044,7 @@ var PRUNE = {
   },
   volumes: {
     label: "Prune unused",
-    args: ["podman", "volume", "prune", "-a", "-f"],
+    args: ["podman", "volume", "prune", "-f"],
     message: "Remove every volume that no container is using? Whatever is stored in them goes with them."
   },
   networks: {
