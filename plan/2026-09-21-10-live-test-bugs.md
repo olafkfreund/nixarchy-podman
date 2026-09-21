@@ -233,6 +233,9 @@ them to see them fail, then fix. Put the failing output in the commit body.
     - Verify: look at every new image and a frame sheet of every video.
       `du -sb docs/img` must be under 8 MB, compared before and after. The
       teardown diff is clean.
+    - Deviation in step 10: deferred at the owner's request ("push and merge all
+      that is done"). The captures were taken on p620 and need that desktop.
+      Tracked in #11, which lists the affected stills and recordings.
 11. **Restore razer and open the PR.**
     - Put the nixarchy link back:
       `rm -rf ~/.config/omarchy/plugins/nixarchy.podman && ln -s <recorded target> ~/.config/omarchy/plugins/nixarchy.podman`,
