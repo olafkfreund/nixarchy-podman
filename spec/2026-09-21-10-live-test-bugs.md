@@ -1,5 +1,5 @@
 ---
-status: draft
+status: approved
 issue: 10
 intent: intent/2026-09-21-10-live-test-bugs.md
 ---
