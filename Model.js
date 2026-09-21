@@ -28,6 +28,11 @@ var UNGROUPED = "\\x00ungrouped"
 
 var UP_STATES = ["running", "restarting", "removing"]
 
+// What a container you stopped exits with: 143 after SIGTERM, 137 when it
+// ignored that and was killed at the stop timeout. Not failures (#10). An OOM
+// kill is also 137 and now reads as a clean stop, accepted at intent approval.
+var STOP_EXIT_CODES = [137, 143]
+
 var MAX_FIELD = 64
 
 // ---------------------------------------------------------------- tabs
@@ -299,26 +304,33 @@ function keySet(names) {
   return out
 }
 
-function labelValue(labels, key) {
+// Podman 5 hands labels over as an object on `ps` and `volume ls`, and as
+// "key=value,key=value" text on `network ls` (as older Podman and Docker do
+// everywhere). Both become one plain map here, so no reader has to care (#10).
+// Not Array.isArray: a list read through QML would be a sequence wrapper.
+function labelMap(labels) {
+  var map = {}
+  if (labels && typeof labels === "object" && labels.length === undefined) {
+    for (var key in labels) map[key] = String(labels[key] === null || labels[key] === undefined ? "" : labels[key])
+    return map
+  }
   var parts = String(labels || "").split(",")
   for (var i = 0; i < parts.length; i++) {
     var eq = parts[i].indexOf("=")
-    if (eq <= 0) continue
-    if (trim(parts[i].substring(0, eq)) === key) return trim(parts[i].substring(eq + 1))
+    var name = trim(eq < 0 ? parts[i] : parts[i].substring(0, eq))
+    if (name) map[name] = eq < 0 ? "" : parts[i].substring(eq + 1)
   }
-  return ""
+  return map
+}
+
+function labelValue(labels, key) {
+  return trim(labelMap(labels)[key] || "")
 }
 
 // Distinguishes "the label is absent" from "the label is set to an empty
 // string" — which is exactly how Compose marks an anonymous volume.
 function hasLabel(labels, key) {
-  var parts = String(labels || "").split(",")
-  for (var i = 0; i < parts.length; i++) {
-    var eq = parts[i].indexOf("=")
-    var name = eq < 0 ? trim(parts[i]) : trim(parts[i].substring(0, eq))
-    if (name === key) return true
-  }
-  return false
+  return Object.prototype.hasOwnProperty.call(labelMap(labels), key)
 }
 
 function composeProject(labels) {
@@ -348,7 +360,7 @@ function exitCode(status) {
 function isFailing(container) {
   if (!container) return false
   if (container.up) return container.health === "unhealthy"
-  return container.exitCode > 0
+  return container.exitCode > 0 && STOP_EXIT_CODES.indexOf(container.exitCode) === -1
 }
 
 function isAlerting(container) {
@@ -874,7 +886,8 @@ function containerRow(container) {
   row.up = container.up
   row.failing = container.failing
   row.restarting = container.state === "restarting"
-  row.unhealthy = container.health === "unhealthy"
+  // A stopped container's last health check is history, not a warning.
+  row.unhealthy = container.up && container.health === "unhealthy"
   // Only a container that is already down. A row can be a few seconds stale,
   // and a stale row must never be the thing that deletes a live container.
   row.removable = !container.up
@@ -934,15 +947,18 @@ var ROW_BUILDERS = {
   networks: networkRow
 }
 
+// Each item is built by its own kind, not the tab's: during a tab switch the
+// view can see the new tab with the old tab's items for one binding pass, and
+// an image builder handed a container makes rows with no key (#10).
 function rowsForSections(sections, kind) {
-  var build = ROW_BUILDERS[kind] || containerRow
+  var fallback = ROW_BUILDERS[kind] || containerRow
   var rows = []
   var list = sections || []
   for (var i = 0; i < list.length; i++) {
     var section = list[i]
     var items = section.items || section.containers || []
     for (var j = 0; j < items.length; j++) {
-      var row = build(items[j])
+      var row = (ROW_BUILDERS[items[j].kind] || fallback)(items[j])
       row.sectionKey = section.key
       row.sectionTitle = j === 0 ? section.title : ""
       row.sectionTally = section.tally
@@ -1029,8 +1045,8 @@ function removeCommand(kind, id) {
   return null
 }
 
-// Deliberately without -f on every one of these. A stale row must never be
-// able to destroy something that came back to life since the last refresh.
+// Only what nothing uses: no --all on containers or volumes, and never a forced
+// rm/rmi. The -f here only skips Podman's own prompt; the panel has asked.
 var PRUNE = {
   containers: {
     label: "Remove stopped",
@@ -1044,7 +1060,7 @@ var PRUNE = {
   },
   volumes: {
     label: "Prune unused",
-    args: ["podman", "volume", "prune", "-a", "-f"],
+    args: ["podman", "volume", "prune", "-f"],
     message: "Remove every volume that no container is using? Whatever is stored in them goes with them."
   },
   networks: {
@@ -1116,6 +1132,12 @@ function clampCursor(cursorIndex, total) {
   if (cursorIndex < 0) return 0
   if (cursorIndex > total - 1) return total - 1
   return cursorIndex
+}
+
+// The first move after opening only shows the cursor where it already points,
+// so j then Enter acts on the top row, not the second (#10).
+function nextCursor(active, index, delta, count) {
+  return { index: clampCursor(active ? index + delta : index, count) }
 }
 
 // ---------------------------------------------------------------- reconcile

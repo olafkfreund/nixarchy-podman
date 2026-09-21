@@ -79,7 +79,7 @@ test("health is only read while the container is actually up", () => {
 
   const crashed = container({
     State: "exited",
-    Status: "Exited (137) 3 days ago",
+    Status: "Exited (1) 3 days ago",
     HealthStatus: "unhealthy"
   })
   eq(crashed.failing, true)
@@ -154,4 +154,31 @@ test("indexStats keys stats output by the id ps also reports", () => {
   eq(stats["ecc682f86872"].memPercent, 0.75)
   eq(stats["ed42e44629ec"].mem, "41.59MiB")
   ok(!stats["nope"])
+})
+
+// Podman 5's `{{json .Labels}}` is an object on `ps` and `volume ls`, and text
+// on `network ls`; both shapes must read the same (#10). This line is verbatim
+// from `podman ps` 5.8.6.
+const PS_OBJECT_LABELS = '{"ID":"9c4763f391f6","Names":"demo-shop-db","Image":"localhost/demo/shop:latest",' +
+  '"State":"running","Status":"Up 21 minutes","Labels":{"com.docker.compose.project":"demo-shop",' +
+  '"io.buildah.version":"1.43.2","io.nixarchy.podman.demo":"true"},"Ports":""}'
+
+test("labels that arrive as an object carry the Compose project", () => {
+  const [c] = Model.normalizeContainers(Model.parseJsonLines(PS_OBJECT_LABELS))
+  eq(c.project, "demo-shop")
+  eq(Model.labelValue({ "com.docker.compose.service": "api" }, "com.docker.compose.service"), "api")
+})
+
+test("labels that arrive as text still parse", () => {
+  eq(Model.labelValue("a=1,com.docker.compose.project=x", "com.docker.compose.project"), "x")
+  eq(Model.labelValue("", "com.docker.compose.project"), "")
+  eq(Model.labelValue(null, "com.docker.compose.project"), "")
+})
+
+test("an object-shaped anonymous-volume label marks the volume anonymous", () => {
+  const [v] = Model.normalizeVolumes(
+    Model.parseJsonLines('{"Name":"cache","Driver":"local","Mountpoint":"/x","Labels":{"com.docker.volume.anonymous":""}}'), [])
+  ok(v.anonymous)
+  ok(Model.hasLabel({ "com.docker.volume.anonymous": "" }, "com.docker.volume.anonymous"))
+  ok(!Model.hasLabel({ other: "1" }, "com.docker.volume.anonymous"))
 })

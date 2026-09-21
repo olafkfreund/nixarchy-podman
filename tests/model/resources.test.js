@@ -569,3 +569,11 @@ test("every row field is declared either a boolean or a string, never neither", 
     ok(Model.ROW_FIELDS.indexOf(field) !== -1, field + " is a real row field")
   }
 })
+
+test("every prune is a command Podman 5 accepts, and none reaches past unused", () => {
+  // Podman's `volume prune` has no -a: it already takes named volumes (#10).
+  eq(Model.pruneSpec("containers").args, ["podman", "container", "prune", "-f"])
+  eq(Model.pruneSpec("images").args, ["podman", "image", "prune", "-a", "-f"])
+  eq(Model.pruneSpec("volumes").args, ["podman", "volume", "prune", "-f"])
+  eq(Model.pruneSpec("networks").args, ["podman", "network", "prune", "-f"])
+})

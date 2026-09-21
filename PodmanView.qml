@@ -21,6 +21,19 @@ FocusScope {
   // would restore whichever child held focus last, stale filter field included.
   readonly property alias keyTarget: keyCatcher
 
+  // How tall the list may grow before it scrolls. The full-screen menu lowers
+  // it so the footer still fits on the card (#10); the popup keeps the default.
+  property int listMaxHeight: Style.space(560)
+  // Everything but the list: what the menu subtracts from the room it has.
+  // Summed from the other children rather than taken as column minus list,
+  // which would read the list's height and loop back into it (#10). The
+  // Column spaces the six always-visible children plus the optional two.
+  readonly property int chromeHeight: hero.implicitHeight + tabStrip.implicitHeight +
+    filterField.implicitHeight + separator.implicitHeight + footer.implicitHeight +
+    (emptyState.visible ? emptyState.implicitHeight : 0) +
+    (errorLine.visible ? errorLine.implicitHeight : 0) +
+    Style.spacing.panelGap * (5 + (emptyState.visible ? 1 : 0) + (errorLine.visible ? 1 : 0))
+
   implicitHeight: column.implicitHeight
 
   signal closeRequested()
@@ -166,9 +179,9 @@ FocusScope {
       filterField.forceActiveFocus()
       return
     }
+    cursorIndex = Model.nextCursor(cursorActive, cursorIndex, delta, rows.length).index
     cursorActive = true
     cursorFromKeyboard = true
-    cursorIndex = Model.clampCursor(cursorIndex + delta, rows.length)
   }
 
   function setCursor(index) {
@@ -244,6 +257,7 @@ FocusScope {
         spacing: Style.spacing.panelGap
 
         PanelHero {
+          id: hero
           title: "Podman"
           meta: Model.summaryText(root.podman.containers, root.podman.daemonReachable)
           foreground: root.foreground
@@ -298,6 +312,7 @@ FocusScope {
         }
 
         TabStrip {
+          id: tabStrip
           width: parent.width
           current: root.podman.tab
           counts: root.podman.tabCounts
@@ -333,6 +348,7 @@ FocusScope {
         ResourceList {
           id: list
           width: parent.width
+          maxHeight: root.listMaxHeight
           rows: root.rows
           kind: root.podman.tab
           stats: root.podman.stats
@@ -352,6 +368,7 @@ FocusScope {
         }
 
         Column {
+          id: emptyState
           visible: list.count === 0
           width: parent.width
           spacing: Style.spacing.sm
@@ -394,6 +411,7 @@ FocusScope {
         // Podman's refusals are more useful than anything the panel could
         // invent, so they get their own line until the user dismisses them.
         Item {
+          id: errorLine
           width: parent.width
           visible: root.podman.lastError !== ""
           implicitHeight: visible ? Math.max(errorText.implicitHeight, errorDismiss.height) : 0
@@ -440,9 +458,10 @@ FocusScope {
           }
         }
 
-        PanelSeparator { foreground: root.foreground }
+        PanelSeparator { id: separator; foreground: root.foreground }
 
         Item {
+          id: footer
           width: parent.width
           implicitHeight: Math.max(usageRow.implicitHeight, pruneButton.implicitHeight)
           height: implicitHeight

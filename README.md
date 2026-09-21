@@ -27,7 +27,7 @@ an empty list.
 **Containers** — grouped by Compose project, running first, with live CPU and memory for
 each one. Start, stop and restart a single container or a whole project; follow its logs or
 drop into a shell inside it; a red dot and a warning glyph call out anything unhealthy,
-crash-looping, or that exited badly.
+crash-looping, or that exited badly. A container you stopped stays dim.
 
 **Images · Volumes · Networks** — each tab splits into **Unused** and **In use**, biggest
 first, so what is costing you disk is the first thing you see. Podman itself decides what
