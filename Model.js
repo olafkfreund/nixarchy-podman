@@ -299,26 +299,33 @@ function keySet(names) {
   return out
 }
 
-function labelValue(labels, key) {
+// Podman 5 hands labels over as an object on `ps` and `volume ls`, and as
+// "key=value,key=value" text on `network ls` (as older Podman and Docker do
+// everywhere). Both become one plain map here, so no reader has to care (#10).
+// Not Array.isArray: a list read through QML would be a sequence wrapper.
+function labelMap(labels) {
+  var map = {}
+  if (labels && typeof labels === "object" && labels.length === undefined) {
+    for (var key in labels) map[key] = String(labels[key] === null || labels[key] === undefined ? "" : labels[key])
+    return map
+  }
   var parts = String(labels || "").split(",")
   for (var i = 0; i < parts.length; i++) {
     var eq = parts[i].indexOf("=")
-    if (eq <= 0) continue
-    if (trim(parts[i].substring(0, eq)) === key) return trim(parts[i].substring(eq + 1))
+    var name = trim(eq < 0 ? parts[i] : parts[i].substring(0, eq))
+    if (name) map[name] = eq < 0 ? "" : parts[i].substring(eq + 1)
   }
-  return ""
+  return map
+}
+
+function labelValue(labels, key) {
+  return trim(labelMap(labels)[key] || "")
 }
 
 // Distinguishes "the label is absent" from "the label is set to an empty
 // string" — which is exactly how Compose marks an anonymous volume.
 function hasLabel(labels, key) {
-  var parts = String(labels || "").split(",")
-  for (var i = 0; i < parts.length; i++) {
-    var eq = parts[i].indexOf("=")
-    var name = eq < 0 ? trim(parts[i]) : trim(parts[i].substring(0, eq))
-    if (name === key) return true
-  }
-  return false
+  return Object.prototype.hasOwnProperty.call(labelMap(labels), key)
 }
 
 function composeProject(labels) {

@@ -27,7 +27,9 @@ Bugs are numbered as in the intent.
    - The array guard is `typeof labels === "object" && labels.length === undefined`,
      not `Array.isArray`.
    - `labelValue` returns `trim(map[key] || "")`, and `hasLabel` returns
-     `key in map`. Their callers don't change.
+     whether `map` has `key` as its own property. Their callers don't change.
+     (Deviation in step 2: own property, not `key in map`, so a label named like
+     an `Object.prototype` member such as `constructor` cannot match.)
 3. **The menu's list height.**
    - `PodmanView.qml` gets `property int listMaxHeight: Style.space(560)`, which
      feeds `ResourceList.maxHeight`, and

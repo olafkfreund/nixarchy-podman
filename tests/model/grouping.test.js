@@ -106,3 +106,12 @@ test("sectionByKey finds the section a row only knows by key", () => {
   eq(Model.sectionByKey(sections, rows[1].sectionKey).title, "Ungrouped")
   eq(Model.sectionByKey(sections, "nope"), null)
 })
+
+test("containers whose labels arrive as an object group under their project (#10)", () => {
+  const line = (id, name) => JSON.stringify({ ID: id, Names: name, Image: "localhost/demo/shop:latest",
+    State: "running", Status: "Up 1 hour", Labels: { "com.docker.compose.project": "demo-shop" }, Ports: "" })
+  const list = Model.normalizeContainers(Model.parseJsonLines(line("aaa111", "web") + "\n" + line("bbb222", "db")))
+  const sections = Model.sectionsFor(list)
+  eq(sections.map(s => s.title), ["demo-shop"])
+  eq(sections[0].total, 2)
+})
