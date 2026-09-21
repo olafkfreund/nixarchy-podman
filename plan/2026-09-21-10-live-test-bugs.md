@@ -196,6 +196,11 @@ them to see them fail, then fix. Put the failing output in the commit body.
 
    Verify: the docs match what the desktop does. Record the evidence in the
    commit body.
+   - Outcome (step 6 evidence): host. After `omarchy bar set`, the menu's next
+     open logged `sameShell=true barCfg=null`. omarchy 4.0.4's `prunePluginApis`
+     revokes and destroys the scoped API, and keep-loaded instances are
+     re-injected only on reload. Took the docs path; the upstream report is
+     drafted for the owner.
 8. **Bug 7: fix at the cause.**
    - Following step 6's log: the re-entrancy guard in `ResourceList.sync()`, or a
      fix to the refused operation (with a Node test if it is in `Model.js`).

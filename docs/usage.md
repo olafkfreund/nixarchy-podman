@@ -189,8 +189,12 @@ The settings are:
 | Measure what each volume costs | on | Off keeps the Volumes tab instant; per-volume sizes stay blank. |
 | Hide the bar icon when empty | off | On hides the glyph until the Containers tab lists at least one container. |
 
-The full-screen menu reads these each time it opens. A change applies the next time you
-open it, with no restart.
+The bar popup applies a change at once. The full-screen menu picks it up only after the
+shell restarts, because of an Omarchy shell issue:
+
+```bash
+omarchy-restart-shell
+```
 
 ## Troubleshooting
 
