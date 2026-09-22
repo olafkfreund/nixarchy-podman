@@ -85,10 +85,11 @@ function isTabKey(key) {
 var SHORTCUTS = [
   { group: "Move", keys: "1 – 4", text: "Jump straight to a tab" },
   { group: "Move", keys: "h  l  ← →", text: "Previous / next tab" },
+  { group: "Move", keys: "tab", text: "Next tab in the full-screen menu; the next bar panel in the popup" },
   { group: "Move", keys: "j  k  ↑ ↓", text: "Move the cursor down / up" },
   { group: "Move", keys: "/", text: "Jump into the filter box" },
   { group: "Move", keys: "k  ↑", text: "From the first row, step back up into the filter" },
-  { group: "Move", keys: "esc", text: "Leave the filter, then close the panel" },
+  { group: "Move", keys: "esc", text: "Dismiss Podman's message, leave the filter, then close the panel" },
 
   { group: "Containers", keys: "enter", text: "Start or stop the container" },
   { group: "Containers", keys: "r", text: "Restart it" },

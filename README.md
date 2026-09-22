@@ -52,10 +52,11 @@ inside either for this same list.
 | --- | --- |
 | `1` – `4` | Jump straight to a tab |
 | `h` `l` · `←` `→` | Previous / next tab |
+| `tab` | Next tab in the full-screen menu; the next bar panel in the popup |
 | `j` `k` · `↑` `↓` | Move the cursor down / up |
 | `/` | Jump into the filter box |
 | `k` `↑` | From the first row, step back up into the filter |
-| `esc` | Leave the filter, then close the panel |
+| `esc` | Dismiss Podman's message, leave the filter, then close the panel |
 | `tab` | Next bar panel, from the popup; next tab, in the full-screen menu |
 
 ### Containers
