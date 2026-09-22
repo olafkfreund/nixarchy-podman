@@ -1,5 +1,5 @@
 ---
-status: draft
+status: approved
 issue: 11
 intent: intent/2026-09-22-11-retake-captures.md
 ---
