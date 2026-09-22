@@ -57,13 +57,10 @@ test("an active filter is called out, because a prune ignores it", () => {
   ok(Model.pruneMessage("containers", containers(), { filter: "" }).indexOf("filter") === -1)
 })
 
-test("hidden stopped containers are counted from podman system df, never invented", () => {
+// No number while they are hidden: on razer, system df's total minus active
+// said 2 where the prune takes 1, because a paused container is not active.
+test("hidden stopped containers are named as hidden, never counted", () => {
   const running = [make("web", "shop", "running")]
-  const usage = { Containers: { count: 6, active: 1 } }
-  eq(Model.pruneMessage("containers", running, { showStopped: false, usage: usage }),
-    "Remove 5 stopped containers? They are hidden because Show stopped containers is off.")
-  eq(Model.pruneMessage("containers", running, { showStopped: false, usage: { Containers: { count: -1, active: 1 } } }),
-    "Remove every stopped container? They are hidden because Show stopped containers is off.")
   eq(Model.pruneMessage("containers", running, { showStopped: false }),
     "Remove every stopped container? They are hidden because Show stopped containers is off.")
 })

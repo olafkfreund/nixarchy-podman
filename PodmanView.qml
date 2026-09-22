@@ -153,7 +153,6 @@ FocusScope {
     // Named from the unfiltered list: a prune ignores the filter (#14).
     var list = root.podman.tab === "containers" ? root.podman.containers : root.podman.items
     ask(spec.args, Model.pruneMessage(root.podman.tab, list, {
-      usage: root.podman.usage,
       showStopped: root.podman.showStopped,
       filter: root.filterText
     }), spec.label)

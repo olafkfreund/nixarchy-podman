@@ -1102,7 +1102,7 @@ function pruneTargets(tabKey, list) {
 
 // The prune question names what goes: in #10 one keypress and one confirm
 // removed five real containers behind a question that named none (#14).
-// opts: {usage, showStopped, filter}.
+// opts: {showStopped, filter}.
 function pruneMessage(tabKey, list, opts) {
   var o = opts || {}
   var spec = pruneSpec(tabKey)
@@ -1110,12 +1110,11 @@ function pruneMessage(tabKey, list, opts) {
   if (!spec || !noun) return ""
   var filterNote = o.filter ? " The filter does not limit a prune." : ""
 
-  // Hidden stopped containers are not in the list; Podman's own tally is.
+  // Hidden stopped containers are not in the list, and no count stands in
+  // for them: podman system df's total minus active also counts paused
+  // containers, which the prune keeps, so it overstated (#14, seen on razer).
   if (tabKey === "containers" && o.showStopped === false) {
-    var entry = usageFor(o.usage, "containers")
-    var hidden = entry && entry.count >= 0 && entry.active >= 0 ? entry.count - entry.active : -1
-    var what = hidden >= 0 ? plural(hidden, noun) : "every " + noun
-    return "Remove " + what + "? They are hidden because Show stopped containers is off." + filterNote
+    return "Remove every " + noun + "? They are hidden because Show stopped containers is off." + filterNote
   }
 
   var targets = pruneTargets(tabKey, list)

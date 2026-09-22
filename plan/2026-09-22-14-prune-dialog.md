@@ -29,6 +29,12 @@ spec: spec/2026-09-22-14-prune-dialog.md
   `Remove N stopped containers? They are hidden because Show stopped containers is off.`
   If either number is `-1`: `Remove every stopped container? …hidden…`. It never
   invents a number.
+- Deviation in step 4, fixed as part of step 1's logic: the hidden-stopped count
+  is dropped. On razer, `podman system df`'s count minus active said
+  "Remove 2 stopped containers" where the prune takes 1: `active` is running only,
+  so a paused container counted as prunable. The message is now always
+  `Remove every stopped container? They are hidden because Show stopped containers is off.`,
+  and `opts.usage` is no longer passed.
 - **Nothing listed, though the tab is still prunable** (reclaimable bytes only): fall
   back to `pruneSpec(tab).message`.
 - **`PodmanView.askPrune`** asks with `pruneMessage(...)`. Cancel stays the default.
