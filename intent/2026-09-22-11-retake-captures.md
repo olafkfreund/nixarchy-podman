@@ -1,5 +1,5 @@
 ---
-status: draft
+status: approved
 issue: 11
 author: olafkfreund
 ---
@@ -79,3 +79,9 @@ desktop.
 2. **Which host?** The originals came from p620: its bar, and 1920×1080 crops. I
    recommend p620 for consistency. razer would change the crop sizes and the bar,
    so every image on the site would visibly change.
+
+## Decisions at approval
+
+Approved without separate answers; the recommendations stand:
+1. Retake once, after #13 and #14 merge.
+2. On p620, the host the originals came from.
