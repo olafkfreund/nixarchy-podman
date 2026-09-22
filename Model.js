@@ -1074,6 +1074,64 @@ function pruneSpec(tabKey) {
   return PRUNE[tabKey] || null
 }
 
+// What `container prune` removes. Not "not up": a paused container is not
+// running, and Podman's prune leaves it alone (#14).
+var PRUNABLE_STATES = ["exited", "created", "stopped", "configured"]
+
+var PRUNE_NOUN = {
+  containers: "stopped container",
+  images: "unused image",
+  volumes: "unused volume",
+  networks: "unused network"
+}
+
+// What a prune on this tab takes, read from the tab's own unfiltered list, so
+// the question can never disagree with the rows above it.
+function pruneTargets(tabKey, list) {
+  var items = list || []
+  var out = []
+  for (var i = 0; i < items.length; i++) {
+    var item = items[i]
+    var taken = tabKey === "containers"
+      ? PRUNABLE_STATES.indexOf(item.state) !== -1
+      : item.inUse === false
+    if (taken) out.push(item)
+  }
+  return out
+}
+
+// The prune question names what goes: in #10 one keypress and one confirm
+// removed five real containers behind a question that named none (#14).
+// opts: {usage, showStopped, filter}.
+function pruneMessage(tabKey, list, opts) {
+  var o = opts || {}
+  var spec = pruneSpec(tabKey)
+  var noun = PRUNE_NOUN[tabKey]
+  if (!spec || !noun) return ""
+  var filterNote = o.filter ? " The filter does not limit a prune." : ""
+
+  // Hidden stopped containers are not in the list; Podman's own tally is.
+  if (tabKey === "containers" && o.showStopped === false) {
+    var entry = usageFor(o.usage, "containers")
+    var hidden = entry && entry.count >= 0 && entry.active >= 0 ? entry.count - entry.active : -1
+    var what = hidden >= 0 ? plural(hidden, noun) : "every " + noun
+    return "Remove " + what + "? They are hidden because Show stopped containers is off." + filterNote
+  }
+
+  var targets = pruneTargets(tabKey, list)
+  if (targets.length === 0) return spec.message + filterNote
+
+  var names = []
+  for (var i = 0; i < targets.length && i < 3; i++) names.push(targets[i].name || targets[i].id)
+  var rest = targets.length - names.length
+  var named = rest > 0 ? names.join(", ") + " and " + rest + " more" : names.join(", ")
+  var warning = ""
+  if (tabKey === "volumes") warning = targets.length === 1
+    ? " Whatever is stored in it goes with it."
+    : " Whatever is stored in them goes with them."
+  return "Remove " + plural(targets.length, noun) + ": " + named + "?" + warning + filterNote
+}
+
 // True only when Podman has told us there is something to reclaim, so the
 // button is never live on a tab that is already clean.
 function canPrune(tabKey, usage, items) {
