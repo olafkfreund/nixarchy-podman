@@ -72,3 +72,12 @@ test("only a running container is marked unhealthy", () => {
   ok(!Model.containerRow(stopped).unhealthy)
   ok(Model.containerRow(running).unhealthy)
 })
+
+// Podman's refusal on razer, verbatim; at 160 characters it was cut off at
+// "force-", and the 64-hex id was most of the length (#13).
+test("Podman's refusal reads in full, with its id shortened", () => {
+  const raw = "Error: image used by e4a591c1459e692b98700f6815b60dc960a5ba477ef627772cad8c899a6f991f: " +
+    "image is in use by a container: consider listing external containers and force-removing image"
+  eq(Model.errorText(raw),
+    "image used by e4a591c1459e: image is in use by a container: consider listing external containers and force-removing image")
+})

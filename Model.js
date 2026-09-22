@@ -1282,7 +1282,10 @@ function errorText(raw) {
   var lines = String(raw || "").split("\n")
   for (var i = 0; i < lines.length; i++) {
     var line = trim(lines[i]).replace(/^Error(?: response from daemon)?:\s*/i, "")
-    if (line) return sanitize(line, 160)
+    // A full 64-hex id was most of the old 160-character budget and cut
+    // Podman's actual advice off mid-word (#13).
+    line = line.replace(/\b([0-9a-f]{12})[0-9a-f]{52}\b/g, "$1")
+    if (line) return sanitize(line, 300)
   }
   return ""
 }

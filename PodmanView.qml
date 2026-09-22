@@ -259,8 +259,10 @@ FocusScope {
       }
       onActivateRequested: if (root.helpOpen) root.helpOpen = false; else root.activateRow()
       onDeleteRequested: if (!root.helpOpen) root.removeAtCursor()
+      // esc: the help sheet, then Podman's message, then the panel (#13).
       onCloseRequested: {
         if (root.helpOpen) root.helpOpen = false
+        else if (root.podman.lastError !== "") root.podman.lastError = ""
         else root.closeRequested()
       }
       onTabRequested: function(direction) { root.switchPanelRequested(direction) }
