@@ -10,6 +10,17 @@ spec: spec/2026-09-22-11-retake-captures.md
 
 - **One session, on p620,** on HDMI-A-1 (1920×1080 at +1849+1440), where the
   originals were taken, using `master` `bc0b77a` (#10, #13 and #14 merged).
+- **Deviation (owner's instruction, 2026-09-22): the session runs on razer, not
+  p620.** The p620 attempt got as far as step 3, then was cancelled when control
+  was not granted, and p620 was restored (the plugin folder `diff -r` clean, the
+  Podman snapshot identical, configs unchanged). razer's eDP-1 is also 1920×1080,
+  so every file keeps its pixel size; only the bar strip at the top of the popup
+  stills shows razer's bar. On razer, the plugin link is recorded and restored
+  (it is a Home Manager link, not a folder), the session's `OMARCHY_PATH` is
+  used, and the session starts only after the running `nhs razer all` deploy has
+  finished and been verified. The privacy rule stands: `confirm-prune.png` on
+  Containers, only if razer has no non-demo stopped containers, checked with the
+  CLI first.
 - **Retake, keeping each name and pixel size:**
 
   | File | Size |
