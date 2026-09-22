@@ -1,5 +1,5 @@
 ---
-status: draft
+status: approved
 issue: 14
 spec: spec/2026-09-22-14-prune-dialog.md
 ---
