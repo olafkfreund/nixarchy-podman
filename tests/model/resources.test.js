@@ -515,7 +515,7 @@ test("the shortcut sheet is one list, grouped in the order it was written", () =
 
 test("every key the panel actually listens for is written down", () => {
   const documented = Model.SHORTCUTS.map(s => s.keys).join(" ")
-  for (const key of ["1 – 4", "j", "x", "p", "c", "n", "u", "d", "o", "r", "s", "/", "?", "enter", "esc"]) {
+  for (const key of ["1 – 4", "j", "x", "p", "c", "n", "u", "d", "o", "r", "s", "/", "?", "enter", "esc", "tab"]) {
     ok(documented.indexOf(key) !== -1, key + " is documented")
   }
 })

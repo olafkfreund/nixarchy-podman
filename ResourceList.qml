@@ -33,6 +33,8 @@ Item {
 
   readonly property color dim: Qt.darker(foreground, 1.5)
   readonly property int count: rowModel.count
+  // The pointer is over the list: the view holds the row order meanwhile (#13).
+  readonly property bool pointerInside: listHover.hovered
 
   signal actionRequested(string kind, string id, string verb)
   signal activated(string id)
@@ -92,6 +94,8 @@ Item {
     interactive: contentHeight > height
 
     ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
+
+    HoverHandler { id: listHover }
 
     model: rowModel
     currentIndex: root.cursorIndex

@@ -151,7 +151,8 @@ Both surfaces use the same keys. Press `?` inside either to see them all.
 
 | To | Do |
 | --- | --- |
-| Pick a tab | `1`–`4`, or `h` / `l` |
+| Pick a tab | `1`–`4`, or `h` / `l`; `tab` in the full-screen menu |
+| Dismiss Podman's message | `esc` while it is showing, or its × |
 | Move the cursor | `j` / `k` |
 | Start or stop a container | Put the cursor on it, press `enter` |
 | Restart a container | `r` |

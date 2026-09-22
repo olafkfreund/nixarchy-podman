@@ -127,7 +127,10 @@ Item {
       height: Math.min(Math.round(view.implicitHeight * root.uiScale) + card.contentTopInset + card.contentBottomInset,
                        Math.round(panel.height * 0.85))
       anchors.horizontalCenter: parent.horizontalCenter
-      y: Math.max(Style.gapsOut, Math.round((panel.height - height) / 3))
+      // A fixed top edge: the card grows downward, so switching to a tab with
+      // more or fewer rows never moves the tabs or the filter (#13). 0.075 is
+      // half of what the 0.85 height cap leaves, so the tallest card is centred.
+      y: Math.max(Style.gapsOut, Math.round(panel.height * 0.075))
       color: Color.popups.background
       borderSpec: Border.surfaceSpec("popups", "border", Color.popups.border, Math.max(1, Style.space(2)))
       padding: Style.spacing.popupPadding
