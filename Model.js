@@ -85,10 +85,11 @@ function isTabKey(key) {
 var SHORTCUTS = [
   { group: "Move", keys: "1 – 4", text: "Jump straight to a tab" },
   { group: "Move", keys: "h  l  ← →", text: "Previous / next tab" },
+  { group: "Move", keys: "tab", text: "Next tab in the full-screen menu; the next bar panel in the popup" },
   { group: "Move", keys: "j  k  ↑ ↓", text: "Move the cursor down / up" },
   { group: "Move", keys: "/", text: "Jump into the filter box" },
   { group: "Move", keys: "k  ↑", text: "From the first row, step back up into the filter" },
-  { group: "Move", keys: "esc", text: "Leave the filter, then close the panel" },
+  { group: "Move", keys: "esc", text: "Dismiss Podman's message, leave the filter, then close the panel" },
 
   { group: "Containers", keys: "enter", text: "Start or stop the container" },
   { group: "Containers", keys: "r", text: "Restart it" },
@@ -1074,6 +1075,63 @@ function pruneSpec(tabKey) {
   return PRUNE[tabKey] || null
 }
 
+// What `container prune` removes. Not "not up": a paused container is not
+// running, and Podman's prune leaves it alone (#14).
+var PRUNABLE_STATES = ["exited", "created", "stopped", "configured"]
+
+var PRUNE_NOUN = {
+  containers: "stopped container",
+  images: "unused image",
+  volumes: "unused volume",
+  networks: "unused network"
+}
+
+// What a prune on this tab takes, read from the tab's own unfiltered list, so
+// the question can never disagree with the rows above it.
+function pruneTargets(tabKey, list) {
+  var items = list || []
+  var out = []
+  for (var i = 0; i < items.length; i++) {
+    var item = items[i]
+    var taken = tabKey === "containers"
+      ? PRUNABLE_STATES.indexOf(item.state) !== -1
+      : item.inUse === false
+    if (taken) out.push(item)
+  }
+  return out
+}
+
+// The prune question names what goes: in #10 one keypress and one confirm
+// removed five real containers behind a question that named none (#14).
+// opts: {showStopped, filter}.
+function pruneMessage(tabKey, list, opts) {
+  var o = opts || {}
+  var spec = pruneSpec(tabKey)
+  var noun = PRUNE_NOUN[tabKey]
+  if (!spec || !noun) return ""
+  var filterNote = o.filter ? " The filter does not limit a prune." : ""
+
+  // Hidden stopped containers are not in the list, and no count stands in
+  // for them: podman system df's total minus active also counts paused
+  // containers, which the prune keeps, so it overstated (#14, seen on razer).
+  if (tabKey === "containers" && o.showStopped === false) {
+    return "Remove every " + noun + "? They are hidden because Show stopped containers is off." + filterNote
+  }
+
+  var targets = pruneTargets(tabKey, list)
+  if (targets.length === 0) return spec.message + filterNote
+
+  var names = []
+  for (var i = 0; i < targets.length && i < 3; i++) names.push(targets[i].name || targets[i].id)
+  var rest = targets.length - names.length
+  var named = rest > 0 ? names.join(", ") + " and " + rest + " more" : names.join(", ")
+  var warning = ""
+  if (tabKey === "volumes") warning = targets.length === 1
+    ? " Whatever is stored in it goes with it."
+    : " Whatever is stored in them goes with them."
+  return "Remove " + plural(targets.length, noun) + ": " + named + "?" + warning + filterNote
+}
+
 // True only when Podman has told us there is something to reclaim, so the
 // button is never live on a tab that is already clean.
 function canPrune(tabKey, usage, items) {
@@ -1138,6 +1196,55 @@ function clampCursor(cursorIndex, total) {
 // so j then Enter acts on the top row, not the second (#10).
 function nextCursor(active, index, delta, count) {
   return { index: clampCursor(active ? index + delta : index, count) }
+}
+
+// The key a row is built with: an image row stands for one tag (#6).
+function itemKey(item) {
+  return item.rowId !== undefined ? item.rowId : item.id
+}
+
+// While the pointer is over the list the rows keep the order they had, so a
+// click never lands on a container that moved under it (#13). Only within a
+// section: held keys keep their snapshot order, new ones follow in natural
+// order, gone ones drop out. heldKeys null means no hold.
+function holdOrder(sections, heldKeys) {
+  if (!heldKeys) return sections
+  var rank = {}
+  for (var i = 0; i < heldKeys.length; i++) rank[heldKeys[i]] = i
+  var out = []
+  for (var s = 0; s < (sections || []).length; s++) {
+    var section = sections[s]
+    var items = (section.items || section.containers || []).slice()
+    var natural = {}
+    for (var n = 0; n < items.length; n++) natural[itemKey(items[n])] = n
+    items.sort(function(a, b) {
+      var ra = rank[itemKey(a)], rb = rank[itemKey(b)]
+      if (ra !== undefined && rb !== undefined) return ra - rb
+      if (ra !== undefined) return -1
+      if (rb !== undefined) return 1
+      return natural[itemKey(a)] - natural[itemKey(b)]
+    })
+    var copy = {}
+    for (var k in section) copy[k] = section[k]
+    copy.items = items
+    copy.containers = items
+    out.push(copy)
+  }
+  return out
+}
+
+// After the rows change, the cursor stays on the row it was on, wherever that
+// row went; if it is gone, the old index is clamped (#13). Matched by row key,
+// so on Images it keeps to its tag rather than a sibling tag of the same id.
+function cursorFollow(rows, id, index) {
+  var list = rows || []
+  if (id) {
+    for (var i = 0; i < list.length; i++) {
+      var key = list[i].key !== undefined ? list[i].key : list[i].id
+      if (key === id) return i
+    }
+  }
+  return clampCursor(index, list.length)
 }
 
 // ---------------------------------------------------------------- reconcile
@@ -1232,7 +1339,10 @@ function errorText(raw) {
   var lines = String(raw || "").split("\n")
   for (var i = 0; i < lines.length; i++) {
     var line = trim(lines[i]).replace(/^Error(?: response from daemon)?:\s*/i, "")
-    if (line) return sanitize(line, 160)
+    // A full 64-hex id was most of the old 160-character budget and cut
+    // Podman's actual advice off mid-word (#13).
+    line = line.replace(/\b([0-9a-f]{12})[0-9a-f]{52}\b/g, "$1")
+    if (line) return sanitize(line, 300)
   }
   return ""
 }

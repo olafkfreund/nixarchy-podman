@@ -50,6 +50,11 @@ FocusScope {
   property bool helpOpen: false
 
   property int cursorIndex: 0
+  // The key of the row the cursor is on, so a re-sort cannot move the cursor
+  // onto a different container (#13).
+  property string cursorKey: ""
+  // Row keys snapshotted while the pointer is over the list, or null (#13).
+  property var heldKeys: null
   property bool cursorActive: false
   property bool cursorFromKeyboard: false
 
@@ -58,15 +63,18 @@ FocusScope {
   readonly property var visibleItems: root.podman.tab === "containers"
     ? Model.filterContainers(root.podman.containers, filterText)
     : Model.filterResources(root.podman.items, filterText)
-  readonly property var sections: root.podman.tab === "containers"
+  readonly property var sections: Model.holdOrder(root.podman.tab === "containers"
     ? Model.sectionsFor(visibleItems)
-    : Model.usageSectionsFor(visibleItems)
+    : Model.usageSectionsFor(visibleItems), heldKeys)
   readonly property var rows: Model.rowsForSections(sections, root.podman.tab)
 
   readonly property var cursorRow: cursorIndex >= 0 && cursorIndex < rows.length ? rows[cursorIndex] : null
   readonly property var cursorItem: cursorRow ? Model.itemById(root.podman.items, cursorRow.id) : null
 
-  onRowsChanged: root.cursorIndex = Model.clampCursor(root.cursorIndex, rows.length)
+  onRowsChanged: root.cursorIndex = Model.cursorFollow(rows, root.cursorKey, root.cursorIndex)
+  // From rows directly: a derived binding like cursorRow can be one pass stale
+  // inside a change handler (the #10 tab-switch glitch).
+  onCursorIndexChanged: root.cursorKey = cursorIndex >= 0 && cursorIndex < rows.length ? rows[cursorIndex].key : ""
 
   Connections {
     target: root.podman
@@ -78,6 +86,13 @@ FocusScope {
       filterField.text = ""
     }
     function onCloseRequested() { root.closeRequested() }
+  }
+
+  Connections {
+    target: list
+    function onPointerInsideChanged() {
+      root.heldKeys = list.pointerInside ? root.rows.map(function(r) { return r.key }) : null
+    }
   }
 
   // ------------------------------------------------------------ lifecycle
@@ -150,7 +165,12 @@ FocusScope {
   function askPrune() {
     var spec = Model.pruneSpec(root.podman.tab)
     if (!spec || !root.podman.prunable) return
-    ask(spec.args, spec.message, spec.label)
+    // Named from the unfiltered list: a prune ignores the filter (#14).
+    var list = root.podman.tab === "containers" ? root.podman.containers : root.podman.items
+    ask(spec.args, Model.pruneMessage(root.podman.tab, list, {
+      showStopped: root.podman.showStopped,
+      filter: root.filterText
+    }), spec.label)
   }
 
   function closeConfirm() {
@@ -244,8 +264,10 @@ FocusScope {
       }
       onActivateRequested: if (root.helpOpen) root.helpOpen = false; else root.activateRow()
       onDeleteRequested: if (!root.helpOpen) root.removeAtCursor()
+      // esc: the help sheet, then Podman's message, then the panel (#13).
       onCloseRequested: {
         if (root.helpOpen) root.helpOpen = false
+        else if (root.podman.lastError !== "") root.podman.lastError = ""
         else root.closeRequested()
       }
       onTabRequested: function(direction) { root.switchPanelRequested(direction) }
