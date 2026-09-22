@@ -61,6 +61,27 @@ spec: spec/2026-09-22-11-retake-captures.md
   pixelating names; linking the folder to `master`'s store path (the p620 wiring
   follow-up).
 
+**Deviations in steps 4–5, taken on razer** (recorded with the captures):
+
+- **Heights follow the current UI.** Widths are unchanged, but five stills are the
+  height the card now is, not the old height: `popup-containers` 512→565
+  (section headers add rows), `filter` 306→342, `confirm-prune` 306→565 (the
+  dialog is centred on the full Containers card), `podman-refuses` 376→364 (the
+  shorter one-line id), `shortcuts` 510→565 (the sheet grew a line). The site's
+  CSS is `height: auto` and no page fixes a size, so nothing reflows.
+- **Recordings are longer:** `rec-menu` about 21 s (was 14.5; it now shows the stop
+  AND the start), `rec-popup` about 20 s, `rec-omarchy-menu` about 8 s. `demo.gif` is
+  800×529, 161 frames, 0.50 MB (was 0.64 MB).
+- **`rec-popup` goes Containers → Networks → Containers → `?`** and never shows
+  Images or Volumes. Switching tabs clears the filter, so any other path shows the
+  owner's unfiltered images and volumes; a first take that did was deleted.
+  The sheet is opened on Containers because on a short card (Networks, a filtered
+  Images) the sheet overflows the card: a new bug, filed separately.
+- **`rec-omarchy-menu` searches "volumes", not "podman".** On razer, "podman" also
+  returned a Files section with real document paths; "volumes" matches the Podman
+  row first and only app/hotkey rows below it (every frame checked).
+- `docs/img/` is 5.76 MB (was 5.02), under 8 MB.
+
 **Safety** (from #10 and #14): screenshot and read every dialog before any confirm,
 and send the confirm in a separate call. This retake confirms nothing: every dialog
 is shot, then cancelled. Never confirm a prune. Ask for ai-mirror control before
