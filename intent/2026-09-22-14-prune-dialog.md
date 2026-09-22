@@ -1,5 +1,5 @@
 ---
-status: draft
+status: approved
 issue: 14
 author: olafkfreund
 ---
@@ -82,3 +82,10 @@ using Podman's own verdict.
 3. **Should the wrapping `l`/`→` from Networks to Containers change?** It set up the
    #10 incident. I recommend no: the listing fixes the danger at the point of
    decision, and the wrap is consistent everywhere.
+
+## Decisions at approval
+
+Approved without separate answers; the recommendations stand:
+1. The dialog states the count and the first few names ("5 containers: a, b, c and 2 more").
+2. Prune keeps taking everything unused; with a filter active, the dialog says so.
+3. The wrapping `l`/`→` stays as it is.
