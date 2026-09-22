@@ -150,7 +150,12 @@ FocusScope {
   function askPrune() {
     var spec = Model.pruneSpec(root.podman.tab)
     if (!spec || !root.podman.prunable) return
-    ask(spec.args, spec.message, spec.label)
+    // Named from the unfiltered list: a prune ignores the filter (#14).
+    var list = root.podman.tab === "containers" ? root.podman.containers : root.podman.items
+    ask(spec.args, Model.pruneMessage(root.podman.tab, list, {
+      showStopped: root.podman.showStopped,
+      filter: root.filterText
+    }), spec.label)
   }
 
   function closeConfirm() {
