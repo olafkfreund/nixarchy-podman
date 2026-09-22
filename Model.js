@@ -1141,6 +1141,55 @@ function nextCursor(active, index, delta, count) {
   return { index: clampCursor(active ? index + delta : index, count) }
 }
 
+// The key a row is built with: an image row stands for one tag (#6).
+function itemKey(item) {
+  return item.rowId !== undefined ? item.rowId : item.id
+}
+
+// While the pointer is over the list the rows keep the order they had, so a
+// click never lands on a container that moved under it (#13). Only within a
+// section: held keys keep their snapshot order, new ones follow in natural
+// order, gone ones drop out. heldKeys null means no hold.
+function holdOrder(sections, heldKeys) {
+  if (!heldKeys) return sections
+  var rank = {}
+  for (var i = 0; i < heldKeys.length; i++) rank[heldKeys[i]] = i
+  var out = []
+  for (var s = 0; s < (sections || []).length; s++) {
+    var section = sections[s]
+    var items = (section.items || section.containers || []).slice()
+    var natural = {}
+    for (var n = 0; n < items.length; n++) natural[itemKey(items[n])] = n
+    items.sort(function(a, b) {
+      var ra = rank[itemKey(a)], rb = rank[itemKey(b)]
+      if (ra !== undefined && rb !== undefined) return ra - rb
+      if (ra !== undefined) return -1
+      if (rb !== undefined) return 1
+      return natural[itemKey(a)] - natural[itemKey(b)]
+    })
+    var copy = {}
+    for (var k in section) copy[k] = section[k]
+    copy.items = items
+    copy.containers = items
+    out.push(copy)
+  }
+  return out
+}
+
+// After the rows change, the cursor stays on the row it was on, wherever that
+// row went; if it is gone, the old index is clamped (#13). Matched by row key,
+// so on Images it keeps to its tag rather than a sibling tag of the same id.
+function cursorFollow(rows, id, index) {
+  var list = rows || []
+  if (id) {
+    for (var i = 0; i < list.length; i++) {
+      var key = list[i].key !== undefined ? list[i].key : list[i].id
+      if (key === id) return i
+    }
+  }
+  return clampCursor(index, list.length)
+}
+
 // ---------------------------------------------------------------- reconcile
 
 function reconcilePlan(currentKeys, nextRows) {
