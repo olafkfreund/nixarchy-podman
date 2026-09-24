@@ -52,6 +52,15 @@ absent during the run.
    `popup-networks.png` (510x362) via `bar tab <name>`.
    → verify by `identify` matching each previous size, and by viewing each.
 
+   **Deviation: two images must change size, because the plugin changed.**
+   `shortcuts.png` goes 510x565 → **510x730**: #17 made the card grow to fit
+   the sheet, and the old crop cut off "press ? or esc to go back" — a
+   truncated capture of the keyboard reference would contradict the fix it is
+   meant to show. `confirm-remove.png` goes 510x306 → **510x400**: #30 sized
+   the dialog buttons to their labels and widened the card, so the old crop
+   cut the buttons off entirely. Both were caught by viewing the image rather
+   than trusting `identify`. `index.md` must be checked for layout shift.
+
 4. **The keyed popup captures**, confirming the layer is up before every
    keypress: `shortcuts.png` (`?`), `filter.png` (`/` then type),
    `confirm-remove.png` (`x`, **then Esc**), `confirm-prune.png` (`p`,

@@ -73,6 +73,10 @@ its current dimensions so `index.md`'s layout does not shift.
 | `glyph-states.png` | 540x132 | bar | three shots of the glyph, composited |
 | `omarchy-menu-row.png` | 324x330 | Omarchy menu | the row users paste in |
 
+**Two images legitimately change size** — see `plan/` — because #17 and #30
+changed the surfaces they show. The "keep current dimensions" constraint holds
+for the other twelve.
+
 **Every dialog is screenshotted and then escaped, never confirmed.** This
 repository's memory records a confirmation answered blind on razer that pruned
 real containers; `confirm-remove` and `confirm-prune` exist to show the
