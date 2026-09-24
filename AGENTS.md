@@ -113,7 +113,10 @@ Each rule records a real failure or a hard constraint:
   command fails silently inside a QML `Process`, so document it as a requirement.
 - **Every piped `sh -c` starts with `set -o pipefail`, and the first command inside a
   `{ …; }` group ends with `|| exit 1`.** Without them, a failing `podman` looks
-  like an empty list.
+  like an empty list. A pipeline that ends in `head` must then accept exit 141 as
+  success: `head` closes the pipe once it has its limit, and `pipefail` reports the
+  producer's SIGPIPE death. A `podman` that genuinely fails exits with its own code,
+  never 141 — use `Model.commandSucceeded` rather than testing for 0 (#21).
 - **Lists read through a QObject `var` property are Qt sequence wrappers, not JS
   arrays.** Check `length`, not `Array.isArray` (see `Model.settingsFor`).
 - **The menu is keep-loaded.** `open()` must reset the view's state, drop the filter
