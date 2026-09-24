@@ -305,25 +305,72 @@ FocusScope {
         anchors.fill: parent
         spacing: Style.spacing.panelGap
 
-        PanelHero {
+        // The shell's PanelHero, drawn here instead of used, because its title
+        // and meta font sizes are internal (PanelHero.qml:57,84,98) and cannot
+        // be reached from outside. Under the old scale: transform they
+        // magnified with everything else; sized by rung they would stay at base
+        // size and the header would read small against the body (#30). Same
+        // layout and the same tokens, only sized through the roles. If omarchy
+        // ever exposes those sizes, delete this and go back to PanelHero.
+        Item {
           id: hero
-          title: "Podman"
-          meta: Model.summaryText(root.podman.containers, root.podman.daemonReachable)
-          foreground: root.foreground
-          fontFamily: root.fontFamily
-          iconOpacity: root.podman.counts.running > 0 ? 1.0 : 0.5
+          width: parent.width
+          implicitHeight: Math.max(heroIcon.implicitHeight, heroLabels.implicitHeight,
+                                   heroTrailing.implicitHeight)
 
-          iconComponent: Text {
+          Text {
+            id: heroIcon
+            anchors.left: parent.left
+            anchors.verticalCenter: parent.verticalCenter
             text: Model.Glyph.podman
             color: root.podman.counts.alerting > 0 ? Color.urgent : root.foreground
+            opacity: root.podman.counts.running > 0 ? 1.0 : 0.5
             font.family: root.fontFamily
             font.pixelSize: root.fontHero
           }
 
-          trailingControl: Row {
+          Column {
+            id: heroLabels
+            anchors.left: heroIcon.right
+            anchors.leftMargin: Style.space(14)
+            anchors.right: parent.right
+            anchors.rightMargin: heroTrailing.width + Style.space(12)
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: Style.space(2)
+
+            Text {
+              textFormat: Text.PlainText
+              width: parent.width
+              text: "Podman"
+              color: root.foreground
+              font.family: root.fontFamily
+              font.pixelSize: root.fontIcon
+              font.bold: true
+              elide: Text.ElideRight
+            }
+
+            Text {
+              textFormat: Text.PlainText
+              width: parent.width
+              text: Model.summaryText(root.podman.containers, root.podman.daemonReachable).toUpperCase()
+              visible: text !== ""
+              color: Qt.darker(root.foreground, 1.5)
+              font.family: root.fontFamily
+              font.pixelSize: root.fontRow
+              font.bold: true
+              font.letterSpacing: 1.2
+              elide: Text.ElideRight
+            }
+          }
+
+          Row {
+            id: heroTrailing
+            anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
             spacing: Style.spacing.sm
 
             PanelActionButton {
+              fontSize: root.fontIcon
               iconText: Model.Glyph.keyboard
               tooltipText: "Keyboard shortcuts  (?)"
               foreground: root.foreground
@@ -332,6 +379,7 @@ FocusScope {
             }
 
             PanelActionButton {
+              fontSize: root.fontIcon
               iconText: Model.Glyph.refresh
               tooltipText: "Refresh  (u)"
               foreground: root.foreground
@@ -349,6 +397,7 @@ FocusScope {
             }
 
             PanelActionButton {
+              fontSize: root.fontIcon
               visible: root.podman.tab === "containers" && root.podman.counts.running > 0
               iconText: Model.Glyph.stop
               tooltipText: "Stop every running container"
