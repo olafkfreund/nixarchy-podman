@@ -68,6 +68,19 @@ One commit per step, citing the step number and `#17`.
 
 4. **HELD — live verification.** In Tests.
 
+   **Partially done, and where it stopped.** The menu case — the one that
+   showed seven rows of nineteen on an empty list — is verified: the whole
+   sheet renders, all four groups, down to "press ? or esc to go back". The
+   shell log showed 0 errors and 0 binding loops, which was the real risk.
+
+   The **bar popup case was not visually confirmed**. Four attempts; each time
+   the popup was dismissed before the screenshot, by "claude finished"
+   notifications from other sessions landing in the same top-right corner and
+   taking focus. That is an environment problem, not a sign the fix failed —
+   the popup shares the same `view.implicitHeight` path and its host clamps
+   with `fittedContentHeight` (`KeyboardPanel.qml:168-171`), read directly.
+   But it is unobserved, and is recorded as such rather than claimed.
+
 ## Tests
 
 ```bash
