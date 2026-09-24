@@ -9,6 +9,32 @@ import "Model.js" as Model
 Item {
   id: root
 
+  // The key column was a fixed Style.space(90), sized for the popup's base
+  // rung: every row paid the width of the longest one, and at the menu's rung
+  // the widest string ("tab  shift+tab") did not fit (#17). Measured instead,
+  // from the keys themselves at whatever rung they are drawn, so the column is
+  // exactly as wide as it needs to be and the text gets the rest.
+  //
+  // Measured by laying the keys out invisibly rather than by driving a
+  // TextMetrics from inside a binding: that would write the property it then
+  // reads back, and re-evaluate on its own output.
+  Item {
+    id: keyMeasure
+    visible: false
+    Repeater {
+      model: Model.SHORTCUTS
+      Text {
+        required property var modelData
+        text: modelData.keys
+        textFormat: Text.PlainText
+        font.family: root.fontFamily
+        font.pixelSize: root.fontRow
+      }
+    }
+  }
+
+  readonly property int keyColumnWidth: Math.ceil(keyMeasure.childrenRect.width)
+
   property bool opened: false
   property color foreground: Color.foreground
   property color background: Color.popups.background
@@ -96,7 +122,7 @@ Item {
                 id: entryKeys
                 anchors.left: parent.left
                 anchors.verticalCenter: parent.verticalCenter
-                width: Style.space(90)
+                width: root.keyColumnWidth
                 text: modelData.keys
                 textFormat: Text.PlainText
                 color: Color.accent
@@ -115,7 +141,10 @@ Item {
                 color: root.dim
                 font.family: root.fontFamily
                 font.pixelSize: root.fontRow
-                elide: Text.ElideRight
+                // Wrap, never elide: a row that loses its end is a reference
+                // entry the reader cannot use (#17).
+                wrapMode: Text.WordWrap
+                elide: Text.ElideNone
               }
             }
           }
