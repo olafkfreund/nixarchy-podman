@@ -172,6 +172,9 @@ number.
   `~/.config/omarchy/plugins/nixarchy.podman` directory first, because nixarchy will
   not replace it.
 - Offer the `pipefail` fix upstream to `i228808/omapodman`.
+- Repin the GitHub Actions when one needs a newer version. They are pinned to a
+  commit SHA with the tag in a comment, and there is no Dependabot, so a pin
+  goes stale silently. Six references across two workflows (#31).
 - Offer `fontSize` properties for `PanelHero`, `TextField` and `ConfirmDialog`
   upstream. Until they exist, the menu must magnify with a transform rather than
   a layout-time multiplier, and long names elide against the pre-transform width
