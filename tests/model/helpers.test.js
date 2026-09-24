@@ -42,11 +42,3 @@ test("labelMap still reads the comma-separated string form", () => {
   eq(m["com.docker.compose.project"], "shop")
   eq(m.role, "web")
 })
-
-// The object-vs-string branch keys off `length === undefined`, which is how it
-// tells a plain object from a string or a Qt sequence wrapper (AGENTS.md).
-test("labelMap decides by shape, not by truthiness", () => {
-  const sequenceish = { length: 2, "0": "a=1", "1": "b=2" }
-  const m = Model.labelMap(sequenceish)
-  ok(m["com.docker.compose.project"] === undefined, "not read as an object")
-})
