@@ -34,7 +34,15 @@ Item {
   // ponytail: one scale on the view rather than a size knob threaded through
   // every font; revisit if the view ever needs different ratios per element.
   readonly property real uiScale: 1.45
-  readonly property int viewWidth: Style.space(680)
+  // A constant slice of whatever screen it opens on, bounded so a small
+  // display stays usable and a very wide one does not become a letterbox.
+  // The bounds are theme units and grow with [font] base-size; the target is
+  // a fraction of real screen pixels, so it is not theme-scaled twice (#22).
+  readonly property int viewWidth: {
+    if (!root.targetScreen) return Style.space(680)
+    var target = Math.round(root.targetScreen.width * 0.46 / root.uiScale)
+    return Math.max(Style.space(560), Math.min(target, Style.space(820)))
+  }
 
   function focusedScreen() {
     var monitor = Hyprland.focusedMonitor
@@ -151,6 +159,12 @@ Item {
           id: view
           // Laid out at its natural size, then drawn uiScale times larger;
           // input is mapped through the same transform, so clicks still land.
+          // The cost is that wrap and elide are computed before the
+          // magnification -- a long name elides against the small width (#22).
+          // A layout-time multiplier would fix that, but ConfirmDialog,
+          // PanelHero and TextField expose no font size, so it would leave the
+          // confirmation question at theme size while the list around it grew.
+          // Uniform beats crisp here. Revisit if those gain a fontSize.
           width: frame.width / root.uiScale
           height: frame.height / root.uiScale
           scale: root.uiScale

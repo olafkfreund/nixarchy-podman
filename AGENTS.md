@@ -161,3 +161,7 @@ number.
   `~/.config/omarchy/plugins/nixarchy.podman` directory first, because nixarchy will
   not replace it.
 - Offer the `pipefail` fix upstream to `i228808/omapodman`.
+- Offer `fontSize` properties for `PanelHero`, `TextField` and `ConfirmDialog`
+  upstream. Until they exist, the menu must magnify with a transform rather than
+  a layout-time multiplier, and long names elide against the pre-transform width
+  (#22).
