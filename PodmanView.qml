@@ -173,6 +173,14 @@ FocusScope {
     }), spec.label)
   }
 
+  function askStopAll() {
+    // The unfiltered list, like a prune (#14): a filter narrows the view, it
+    // has never narrowed what the command takes.
+    var spec = Model.stopAllSpec(root.podman.containers)
+    if (!spec) return
+    ask(spec.args, spec.message, spec.label)
+  }
+
   function closeConfirm() {
     root.confirmOpen = false
     root.pendingCommand = null
@@ -328,7 +336,7 @@ FocusScope {
               foreground: root.foreground
               hoverColor: Color.urgent
               fontFamily: root.fontFamily
-              onClicked: root.podman.stopEverything()
+              onClicked: root.askStopAll()
             }
           }
         }
