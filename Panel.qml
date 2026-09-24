@@ -52,8 +52,6 @@ Panel {
 
     function open(): void { root.open() }
     function close(): void { root.close() }
-    function show(): void { root.open() }
-    function hide(): void { root.close() }
     function toggle(): void { root.toggle() }
     function refresh(): void { podmanState.refreshAll() }
     function stopAll(): void { podmanState.stopEverything() }

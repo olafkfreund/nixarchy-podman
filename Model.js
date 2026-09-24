@@ -85,13 +85,13 @@ function isTabKey(key) {
 var SHORTCUTS = [
   { group: "Move", keys: "1 – 4", text: "Jump straight to a tab" },
   { group: "Move", keys: "h  l  ← →", text: "Previous / next tab" },
-  { group: "Move", keys: "tab", text: "Next tab in the full-screen menu; the next bar panel in the popup" },
+  { group: "Move", keys: "tab  shift+tab", text: "Next or previous tab in the full-screen menu; the next bar panel in the popup" },
   { group: "Move", keys: "j  k  ↑ ↓", text: "Move the cursor down / up" },
   { group: "Move", keys: "/", text: "Jump into the filter box" },
   { group: "Move", keys: "k  ↑", text: "From the first row, step back up into the filter" },
-  { group: "Move", keys: "esc", text: "Dismiss Podman's message, leave the filter, then close the panel" },
+  { group: "Move", keys: "esc", text: "Close the shortcut sheet, dismiss Podman's message, leave the filter, then close the panel" },
 
-  { group: "Containers", keys: "enter", text: "Start or stop the container" },
+  { group: "Containers", keys: "enter  space", text: "Start or stop the container" },
   { group: "Containers", keys: "r", text: "Restart it" },
   { group: "Containers", keys: "o", text: "Follow its logs in a terminal" },
   { group: "Containers", keys: "s", text: "Open a shell inside it" },
@@ -231,6 +231,15 @@ function sumSizes(list) {
 }
 
 // ---------------------------------------------------------------- parsing
+
+// head -c closes the pipe once it has what we asked for, and pipefail then
+// reports the producer's SIGPIPE death as 141. That means truncated, not
+// failed: a podman that genuinely fails exits with its own code (125 for an
+// unknown subcommand), never 141. Measured, not assumed (#21). This holds
+// only while head is the single consumer of each pipeline.
+function commandSucceeded(code) {
+  return code === 0 || code === 141
+}
 
 function parseJsonLines(raw) {
   var lines = String(raw || "").split("\n")
@@ -570,7 +579,6 @@ function normalizeNetwork(raw, unused) {
     id: trim(raw && raw.ID),
     name: sanitize(name, 96),
     driver: sanitize(raw && raw.Driver, 24),
-    scope: sanitize(raw && raw.Scope, 16),
     project: sanitize(composeProject(labels), 32),
     internal: trim(raw && raw.Internal) === "true",
     ipv6: trim(raw && raw.IPv6) === "true",
@@ -1133,6 +1141,34 @@ function pruneMessage(tabKey, list, opts) {
     ? " Whatever is stored in it goes with it."
     : " Whatever is stored in them goes with them."
   return "Remove " + plural(targets.length, noun) + ": " + named + "?" + warning + filterNote
+}
+
+// Every running container at once, named like a prune (#14): the question
+// says what it takes, because "Are you sure?" teaches people to say yes.
+// Returns null when nothing is running, which is also the button's
+// visibility condition, so the two cannot disagree.
+function stopAllSpec(containers) {
+  var running = []
+  for (var i = 0; i < (containers || []).length; i++) {
+    if (containers[i].up) running.push(containers[i])
+  }
+  if (running.length === 0) return null
+
+  var ids = []
+  for (var j = 0; j < running.length; j++) ids.push(running[j].id)
+
+  var names = []
+  for (var k = 0; k < running.length && k < 3; k++) {
+    names.push(running[k].name || running[k].id)
+  }
+  var rest = running.length - names.length
+  var named = rest > 0 ? names.join(", ") + " and " + rest + " more" : names.join(", ")
+
+  return {
+    args: ["podman", "stop"].concat(ids),
+    message: "Stop " + plural(running.length, "running container") + ": " + named + "?",
+    label: "Stop all"
+  }
 }
 
 // One definition of "prunable", shared with the question that names what

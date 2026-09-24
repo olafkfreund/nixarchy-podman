@@ -115,7 +115,7 @@ done, and does not need the widget to be in the bar at all.
 </figure>
 <figure class="shot">
   <img src="img/confirm-prune.png" alt="Prune confirmation" loading="lazy">
-  <figcaption><kbd>p</kbd> says exactly what kind of thing goes, and has Cancel selected.</figcaption>
+  <figcaption><kbd>p</kbd> names what it will take, and has Cancel selected.</figcaption>
 </figure>
 </div>
 <figure class="shot">
