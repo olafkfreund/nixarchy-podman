@@ -1132,6 +1132,34 @@ function pruneMessage(tabKey, list, opts) {
   return "Remove " + plural(targets.length, noun) + ": " + named + "?" + warning + filterNote
 }
 
+// Every running container at once, named like a prune (#14): the question
+// says what it takes, because "Are you sure?" teaches people to say yes.
+// Returns null when nothing is running, which is also the button's
+// visibility condition, so the two cannot disagree.
+function stopAllSpec(containers) {
+  var running = []
+  for (var i = 0; i < (containers || []).length; i++) {
+    if (containers[i].up) running.push(containers[i])
+  }
+  if (running.length === 0) return null
+
+  var ids = []
+  for (var j = 0; j < running.length; j++) ids.push(running[j].id)
+
+  var names = []
+  for (var k = 0; k < running.length && k < 3; k++) {
+    names.push(running[k].name || running[k].id)
+  }
+  var rest = running.length - names.length
+  var named = rest > 0 ? names.join(", ") + " and " + rest + " more" : names.join(", ")
+
+  return {
+    args: ["podman", "stop"].concat(ids),
+    message: "Stop " + plural(running.length, "running container") + ": " + named + "?",
+    label: "Stop all"
+  }
+}
+
 // True only when Podman has told us there is something to reclaim, so the
 // button is never live on a tab that is already clean.
 function canPrune(tabKey, usage, items) {
