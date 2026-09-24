@@ -395,6 +395,9 @@ function shortImage(image) {
       value = value.substring(slash + 1)
     }
   }
+  // A digest pins the image; the colon inside it is not a tag delimiter.
+  var at = value.indexOf("@")
+  if (at > 0) return value.substring(0, at) + "@" + shortId(value.substring(at + 1))
   var colon = value.lastIndexOf(":")
   if (colon > 0 && value.indexOf("/", colon) === -1) value = value.substring(0, colon)
   return value
