@@ -15,6 +15,22 @@ FocusScope {
   property string defaultTab: "containers"
   property color foreground: Color.foreground
   property string fontFamily: Style.font.family
+
+  // A full-screen surface is read from further away than a bar popup, so it is
+  // drawn larger -- but by picking LARGER TOKENS, never by a factor. Each rung
+  // derives from [font] base-size, so the menu moves in step with the desktop
+  // instead of sitting a fixed percentage above it, and a theme that pins a
+  // token is honoured. Do not reintroduce a scale: transform (it magnifies
+  // after layout, so wrap and elide are computed at the wrong size) or a flat
+  // multiplier (#30). nix flake check fails on either.
+  property bool large: false
+
+  readonly property int fontRow:   large ? Style.font.title        : Style.font.caption
+  readonly property int fontGlyph: large ? Style.font.title        : Style.font.iconSmall
+  readonly property int fontLabel: large ? Style.font.heading      : Style.font.body
+  readonly property int fontTab:   large ? Style.font.title        : Style.font.bodySmall
+  readonly property int fontIcon:  large ? Style.font.heading      : Style.font.icon
+  readonly property int fontHero:  large ? Style.font.displayLarge : Style.font.display
   readonly property color dim: Qt.darker(foreground, 1.5)
 
   // KeyboardPanel focuses this directly: handing it the FocusScope instead
