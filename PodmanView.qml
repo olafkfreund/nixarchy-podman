@@ -50,7 +50,13 @@ FocusScope {
     (errorLine.visible ? errorLine.implicitHeight : 0) +
     Style.spacing.panelGap * (5 + (emptyState.visible ? 1 : 0) + (errorLine.visible ? 1 : 0))
 
-  implicitHeight: column.implicitHeight
+  // The sheet is an overlay, so it contributes nothing to the column and the
+  // card ends up sized for the list behind it -- on an empty list that left it
+  // showing seven rows of nineteen (#17). Reporting the height it wants is not
+  // joining the layout: it stays at z: 5, absolutely positioned, and the rows
+  // behind do not move. Both hosts clamp what they actually give.
+  implicitHeight: helpOpen ? Math.max(column.implicitHeight, helpSheet.wantedHeight)
+                           : column.implicitHeight
 
   signal closeRequested()
   signal switchPanelRequested(int direction)

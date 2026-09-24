@@ -35,6 +35,10 @@ Item {
 
   readonly property int keyColumnWidth: Math.ceil(keyMeasure.childrenRect.width)
 
+  // What the sheet needs to show every row, so the host can make room (#17).
+  // Matches the Flickable's margins below; change them together.
+  readonly property int wantedHeight: sheetColumn.implicitHeight + Style.spacing.md * 2
+
   property bool opened: false
   property color foreground: Color.foreground
   property color background: Color.popups.background
