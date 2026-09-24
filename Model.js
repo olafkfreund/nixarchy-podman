@@ -982,6 +982,9 @@ function rowsForSections(sections, kind) {
   return rows
 }
 
+// Test-only: production calls rowsForSections(sections, tab) directly, for
+// whichever tab is on screen. This wrapper pins "containers" and exists
+// because the container-row tests all want that one (#41).
 function rowsFor(sections) {
   return rowsForSections(sections, "containers")
 }
@@ -1207,10 +1210,6 @@ function itemById(items, id) {
     if ((list[i].rowId || list[i].id) === id) return list[i]
   }
   return null
-}
-
-function containerById(containers, id) {
-  return itemById(containers, id)
 }
 
 function containerAtCursor(containers, rows, cursorIndex) {
