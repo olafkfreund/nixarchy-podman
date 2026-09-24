@@ -182,3 +182,25 @@ test("an object-shaped anonymous-volume label marks the volume anonymous", () =>
   ok(Model.hasLabel({ "com.docker.volume.anonymous": "" }, "com.docker.volume.anonymous"))
   ok(!Model.hasLabel({ other: "1" }, "com.docker.volume.anonymous"))
 })
+
+// A pipeline ending in `head` reports 141 when head takes its limit and the
+// producer dies of SIGPIPE. That is truncation, not failure -- a podman that
+// genuinely fails exits with its own code (#21).
+test("truncation counts as success, a real failure does not", () => {
+  eq(Model.commandSucceeded(0), true)
+  eq(Model.commandSucceeded(141), true, "head closed the pipe on a full read")
+  eq(Model.commandSucceeded(1), false)
+  eq(Model.commandSucceeded(125), false, "podman's own code for a bad subcommand")
+  eq(Model.commandSucceeded(126), false)
+  eq(Model.commandSucceeded(137), false)
+})
+
+// Accepting 141 is only safe because a cut record is dropped rather than
+// half-read. The whole design rests on this.
+test("a record cut mid-object is dropped, the ones before it are kept", () => {
+  const whole = JSON.stringify({ ID: "a", Names: "web" })
+  const cut = whole + "\n" + JSON.stringify({ ID: "b", Names: "db" }).substring(0, 14)
+  const parsed = Model.parseJsonLines(cut)
+  eq(parsed.length, 1)
+  eq(parsed[0].Names, "web")
+})
