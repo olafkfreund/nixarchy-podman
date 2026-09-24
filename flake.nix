@@ -119,6 +119,13 @@
                 echo "a text multiplier is back; use the large roles instead" >&2
                 exit 1
               fi
+              # By name is not enough: a bare `scale: 1.45` with no named
+              # property passes the grep above. Tested, and reported by the
+              # nixarchy.devenv review that filed #30.
+              if grep -nE '^[[:space:]]*scale:' ${plugin}/*.qml; then
+                echo "a scale transform is back; it magnifies after layout" >&2
+                exit 1
+              fi
 
               # The pipefail rule, by the two invariants a grep can assert exactly:
               # every head-bounded pipeline carries pipefail, and nothing tests a

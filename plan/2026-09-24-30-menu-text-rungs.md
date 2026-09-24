@@ -144,6 +144,13 @@ One commit per step, citing the step number and `#30`.
    → verify by reintroducing `uiScale` in a scratch clone and seeing it fail,
    as #24's checks were demonstrated.
 
+   **Deviation.** Catching a multiplier by *name* is not enough: a bare
+   `scale: 1.45` with no named property passes that grep. Tested here in a
+   scratch clone, and independently reported by the `nixarchy.devenv` review
+   that filed #30, which found the same hole in distrobox's version. A fourth
+   guard, `grep -nE '^[[:space:]]*scale:'`, is added and demonstrated
+   failing.
+
 8. **AGENTS.md**: note that the menu sizes by rungs, not a factor, so the next
    reader does not reintroduce one.
 
