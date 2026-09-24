@@ -81,6 +81,12 @@ One commit per step, citing the step number and `#24`.
 
    And one clause on the existing `jq -e`: `and .keepLoaded == true`.
 
+   **Deviation, found by step 4f.** Breaking `keepLoaded` did fail the check,
+   but with no message at all — `jq -e` exits non-zero silently, so the reader
+   saw only `170 passed, 0 failed` and a store path. Pre-existing, and made
+   more likely to fire by the new clause. The `jq` gains an `|| { echo …;
+   exit 1; }` naming what is wrong, so a manifest failure is legible.
+
    → verify by `nix flake check` green, then by step 4's breakages.
 
 3. **`AGENTS.md`: narrow the `pacman` rule to what it means** and record what

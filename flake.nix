@@ -74,7 +74,10 @@
                 and .entryPoints.menu == "Menu.qml"
                 and .entryPoints.barWidget == "Panel.qml"
                 and .keepLoaded == true
-              ' ${plugin}/manifest.json > /dev/null
+              ' ${plugin}/manifest.json > /dev/null || {
+                echo "manifest.json: schemaVersion, id, kinds, entryPoints or keepLoaded is wrong" >&2
+                exit 1
+              }
               for f in $(jq -r '.entryPoints[]' ${plugin}/manifest.json); do
                 test -f "${plugin}/$f" || { echo "entry point $f missing from the package" >&2; exit 1; }
               done
