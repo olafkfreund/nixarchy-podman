@@ -82,6 +82,20 @@ absent during the run.
    retaken, not kept.
    → verify by viewing all fourteen.
 
+7b. **Deviation: `omarchy-menu-row.png` was not retaken.** Three attempts.
+   It shows Omarchy's own launcher searched for "podman" rather than this
+   plugin's UI, and the menu closed before the capture each time — once
+   because DP-1's workspace had been switched back underneath it by another
+   session. The original is restored from git and the image is left stale.
+   It is the least plugin-specific of the fourteen, and a wrong capture is
+   worse than an old one. Worth doing in a sitting where the desktop is not
+   shared.
+
+   Note for whoever takes it: p620 does not have Podman Desktop or BoxBuddy
+   installed, so the search result list will be shorter than the shipped
+   image's. That is arguably clearer, but it is a change in what the figure
+   shows.
+
 8. **Restore.** `--teardown`, return each monitor to its recorded workspace,
    diff the podman snapshot.
    → verify by four identical diffs.
