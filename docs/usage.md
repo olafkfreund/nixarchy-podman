@@ -154,13 +154,14 @@ Both surfaces use the same keys. Press `?` inside either to see them all.
 | Pick a tab | `1`–`4`, or `h` / `l`; `tab` in the full-screen menu |
 | Dismiss Podman's message | `esc` while it is showing, or its × |
 | Move the cursor | `j` / `k` |
-| Start or stop a container | Put the cursor on it, press `enter` |
+| Start or stop a container | Put the cursor on it, press `enter` or `space` |
 | Restart a container | `r` |
 | Follow its logs | `o` opens them in a terminal |
 | Get a shell inside it | `s` (running containers only) |
 | Copy its name | `n` |
 | Copy an id, or a volume's mount path | `c`; on Images, Volumes and Networks, `enter` does the same |
 | Remove one thing | `x`. It asks first, and **Cancel** is the default. On an image, `x` removes the tag under the cursor; the image goes when its last tag does |
+| Stop everything at once | The stop button in the header, shown while anything is running. It asks first, naming up to three of the containers it will stop and counting the rest. Like a prune, it ignores the filter |
 | Reclaim space on this tab | `p`, or the footer button. It asks first, counting and naming what will go. A prune ignores the filter, and the question says so when one is set |
 | Filter the list | `/`, then type. `↓` returns to the list; if nothing matches, it stays in the filter. The first `esc` clears the text, the second leaves the filter |
 | Refresh now | `u` |

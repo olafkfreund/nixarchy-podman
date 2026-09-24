@@ -63,7 +63,7 @@ inside either for this same list.
 
 | Key | Does |
 | --- | --- |
-| `enter` | Start or stop the container |
+| `enter` `space` | Start or stop the container |
 | `r` | Restart it |
 | `o` | Follow its logs in a terminal |
 | `s` | Open a shell inside it |
@@ -89,7 +89,8 @@ Both always ask first.
 | `?` | Show the shortcut sheet |
 
 Clicking works everywhere too: a row copies its identifier, the buttons at its right edge do
-what their tooltips say, and a project header starts or stops the whole project.
+what their tooltips say, and a project header starts or stops the whole project. The one that
+stops every running container asks first, and the question names what it is about to stop.
 
 ## Installation
 

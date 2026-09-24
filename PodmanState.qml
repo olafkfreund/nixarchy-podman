@@ -194,6 +194,9 @@ Item {
     if (container && container.up) runAction([container.id], "restart")
   }
 
+  // The stopAll IPC verb's entry point, and only that -- Panel.qml:59. The
+  // button asks first and builds its own command (#19); a scripted caller
+  // cannot answer a dialog, so this path stays direct.
   function stopEverything() {
     var ids = []
     for (var i = 0; i < containers.length; i++) {

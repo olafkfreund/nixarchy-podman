@@ -69,3 +69,54 @@ test("nothing to name falls back to the plain question rather than claiming zero
   eq(Model.pruneMessage("images", [], {}), Model.pruneSpec("images").message)
   eq(Model.pruneMessage("networks", null, {}), Model.pruneSpec("networks").message)
 })
+
+// Stopping every running container at once asks the same kind of question a
+// prune does (#19): one keystroke took them all down and named none of them.
+
+test("stop-all is offered only while something is running", () => {
+  eq(Model.stopAllSpec([]), null)
+  eq(Model.stopAllSpec(null), null)
+  eq(Model.stopAllSpec([make("db", "", "exited"), make("job", "", "created")]), null)
+})
+
+// A paused container is not up, so counts.running does not count it and the
+// button is not offered for it either -- the same field governs both.
+test("stop-all takes the running ones and leaves the rest alone", () => {
+  const spec = Model.stopAllSpec(containers())
+  eq(spec.args, ["podman", "stop", "web"])
+  ok(spec.message.indexOf("db") === -1, "a stopped container is never named")
+  ok(spec.message.indexOf("held") === -1, "nor a paused one")
+})
+
+test("stop-all and the button that offers it read the same field", () => {
+  const paused = [make("held", "", "paused")]
+  eq(Model.counts(paused).running, 0)
+  eq(Model.stopAllSpec(paused), null)
+})
+
+test("one running container is named in the singular", () => {
+  const spec = Model.stopAllSpec([make("web", "shop", "running")])
+  eq(spec.args, ["podman", "stop", "web"])
+  eq(spec.message, "Stop 1 running container: web?")
+  eq(spec.label, "Stop all")
+})
+
+test("three are all named, with nothing left over", () => {
+  const spec = Model.stopAllSpec([
+    make("web", "", "running"), make("db", "", "running"), make("api", "", "running")
+  ])
+  eq(spec.message, "Stop 3 running containers: web, db, api?")
+  ok(spec.message.indexOf("more") === -1)
+})
+
+test("past three, the rest are counted rather than listed", () => {
+  const five = ["web", "db", "api", "cache", "queue"].map(n => make(n, "", "running"))
+  const spec = Model.stopAllSpec(five)
+  eq(spec.message, "Stop 5 running containers: web, db, api and 2 more?")
+  eq(spec.args, ["podman", "stop", "web", "db", "api", "cache", "queue"])
+})
+
+test("a container with no name is named by its id", () => {
+  const spec = Model.stopAllSpec([make("", "", "running", { ID: "7fd8eaad6bb6" })])
+  ok(spec.message.indexOf("7fd8eaad6bb6") !== -1, spec.message)
+})
