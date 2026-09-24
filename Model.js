@@ -232,6 +232,15 @@ function sumSizes(list) {
 
 // ---------------------------------------------------------------- parsing
 
+// head -c closes the pipe once it has what we asked for, and pipefail then
+// reports the producer's SIGPIPE death as 141. That means truncated, not
+// failed: a podman that genuinely fails exits with its own code (125 for an
+// unknown subcommand), never 141. Measured, not assumed (#21). This holds
+// only while head is the single consumer of each pipeline.
+function commandSucceeded(code) {
+  return code === 0 || code === 141
+}
+
 function parseJsonLines(raw) {
   var lines = String(raw || "").split("\n")
   var out = []
