@@ -133,8 +133,10 @@ Everything below is per-instance, set with `omarchy bar set nixarchy.podman <key
 | Measure what each volume costs | on | Off keeps the volume list instant and leaves per-volume sizes blank. The reclaimable total still works. |
 | Hide the bar icon when empty | off | On removes the button until the Containers tab lists at least one container. |
 
-The full-screen menu reads the same settings from the bar widget's entry each time it
-opens. The one exception is hiding the bar icon, which has no meaning in the menu.
+The full-screen menu reads the same settings from the bar widget's entry, but only
+after the shell restarts (`omarchy-restart-shell`) — see the Settings section of
+[the guide](docs/usage.md#settings). The one exception is hiding the bar icon, which
+has no meaning in the menu.
 
 ## IPC
 
