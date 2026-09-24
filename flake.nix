@@ -110,6 +110,16 @@
                 echo "hardcoded colour above; use a Color.* token" >&2; exit 1
               fi
 
+              # The menu is drawn larger by picking larger tokens, never by a
+              # factor. A scale: transform magnifies after layout (wrap and
+              # elide computed at the wrong size, content clipped unreachably);
+              # a flat multiplier keeps this surface a fixed percentage above
+              # every other one and overrides a pinned theme token (#30).
+              if grep -nwE 'textScale|uiScale' ${plugin}/*.qml; then
+                echo "a text multiplier is back; use the large roles instead" >&2
+                exit 1
+              fi
+
               # The pipefail rule, by the two invariants a grep can assert exactly:
               # every head-bounded pipeline carries pipefail, and nothing tests a
               # bare exit 0 -- a truncating head exits 141 (#21).
