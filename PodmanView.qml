@@ -361,6 +361,9 @@ FocusScope {
         }
 
         TabStrip {
+          fontRow: root.fontRow
+          fontGlyph: root.fontGlyph
+          fontTab: root.fontTab
           id: tabStrip
           width: parent.width
           current: root.podman.tab
@@ -395,6 +398,9 @@ FocusScope {
         }
 
         ResourceList {
+          fontRow: root.fontRow
+          fontGlyph: root.fontGlyph
+          fontLabel: root.fontLabel
           id: list
           width: parent.width
           maxHeight: root.listMaxHeight
@@ -566,6 +572,8 @@ FocusScope {
     }
 
     ShortcutSheet {
+      fontRow: root.fontRow
+      fontIcon: root.fontIcon
       id: helpSheet
       anchors.fill: parent
       z: 5

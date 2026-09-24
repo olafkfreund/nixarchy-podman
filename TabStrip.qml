@@ -16,6 +16,10 @@ Item {
   property bool alerting: false
   property color foreground: Color.foreground
   property string fontFamily: Style.font.family
+  // Sized by the host's rung, not a factor (#30).
+  property int fontRow: Style.font.caption
+  property int fontGlyph: Style.font.iconSmall
+  property int fontTab: Style.font.bodySmall
 
   readonly property color dim: Qt.darker(foreground, 1.5)
   readonly property int columnWidth: Math.floor(width / Model.TABS.length)

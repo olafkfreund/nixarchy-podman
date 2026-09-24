@@ -29,6 +29,10 @@ Item {
 
   property color foreground: Color.foreground
   property string fontFamily: Style.font.family
+  // Sized by the host's rung, not a factor (#30).
+  property int fontRow: Style.font.caption
+  property int fontGlyph: Style.font.iconSmall
+  property int fontLabel: Style.font.body
   property int maxHeight: Style.space(560)
 
   readonly property color dim: Qt.darker(foreground, 1.5)
