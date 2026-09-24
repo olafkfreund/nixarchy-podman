@@ -1,0 +1,4 @@
+# nix build leaves these; omarchy-plugin-validate refuses a symlink
+# inside a plugin, and this repo is cloned AS the plugin folder.
+result
+result-*
