@@ -159,6 +159,12 @@ Item {
           id: view
           // Laid out at its natural size, then drawn uiScale times larger;
           // input is mapped through the same transform, so clicks still land.
+          // The cost is that wrap and elide are computed before the
+          // magnification -- a long name elides against the small width (#22).
+          // A layout-time multiplier would fix that, but ConfirmDialog,
+          // PanelHero and TextField expose no font size, so it would leave the
+          // confirmation question at theme size while the list around it grew.
+          // Uniform beats crisp here. Revisit if those gain a fontSize.
           width: frame.width / root.uiScale
           height: frame.height / root.uiScale
           scale: root.uiScale
