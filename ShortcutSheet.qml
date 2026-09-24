@@ -50,7 +50,7 @@ Item {
           textFormat: Text.PlainText
           color: root.foreground
           font.family: root.fontFamily
-          font.pixelSize: Style.font.icon
+          font.pixelSize: root.fontIcon
         }
 
         Text {
@@ -59,7 +59,7 @@ Item {
           textFormat: Text.PlainText
           color: root.foreground
           font.family: root.fontFamily
-          font.pixelSize: Style.font.caption
+          font.pixelSize: root.fontRow
           font.bold: true
           font.letterSpacing: 1.2
         }
@@ -101,7 +101,7 @@ Item {
                 textFormat: Text.PlainText
                 color: Color.accent
                 font.family: root.fontFamily
-                font.pixelSize: Style.font.caption
+                font.pixelSize: root.fontRow
               }
 
               Text {
@@ -114,7 +114,7 @@ Item {
                 textFormat: Text.PlainText
                 color: root.dim
                 font.family: root.fontFamily
-                font.pixelSize: Style.font.caption
+                font.pixelSize: root.fontRow
                 elide: Text.ElideRight
               }
             }
@@ -130,7 +130,7 @@ Item {
         textFormat: Text.PlainText
         color: root.dim
         font.family: root.fontFamily
-        font.pixelSize: Style.font.caption
+        font.pixelSize: root.fontRow
       }
     }
   }

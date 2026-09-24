@@ -181,7 +181,7 @@ Item {
         textFormat: Text.PlainText
         color: root.dim
         font.family: root.fontFamily
-        font.pixelSize: Style.font.caption
+        font.pixelSize: root.fontRow
       }
 
       PanelActionButton {
@@ -285,7 +285,7 @@ Item {
               width: Math.min(implicitWidth, parent.width - (healthGlyph.visible ? healthGlyph.implicitWidth + Style.spacing.md : 0))
               color: rowSurface.row.muted ? root.dim : root.foreground
               font.family: root.fontFamily
-              font.pixelSize: Style.font.body
+              font.pixelSize: root.fontLabel
               elide: Text.ElideRight
             }
 
@@ -296,7 +296,7 @@ Item {
               text: Model.Glyph.unhealthy
               color: Color.urgent
               font.family: root.fontFamily
-              font.pixelSize: Style.font.iconSmall
+              font.pixelSize: root.fontGlyph
             }
           }
 
@@ -307,7 +307,7 @@ Item {
             visible: text !== ""
             color: root.dim
             font.family: root.fontFamily
-            font.pixelSize: Style.font.caption
+            font.pixelSize: root.fontRow
             elide: Text.ElideRight
           }
 
@@ -318,7 +318,7 @@ Item {
             textFormat: Text.PlainText
             color: rowSurface.row.failing ? Color.urgent : root.dim
             font.family: root.fontFamily
-            font.pixelSize: Style.font.caption
+            font.pixelSize: root.fontRow
             elide: Text.ElideRight
           }
         }
@@ -333,7 +333,7 @@ Item {
           textFormat: Text.PlainText
           color: rowSurface.row.muted ? root.foreground : root.dim
           font.family: root.fontFamily
-          font.pixelSize: Style.font.caption
+          font.pixelSize: root.fontRow
         }
 
         Row {
@@ -408,7 +408,7 @@ Item {
       textFormat: Text.PlainText
       color: root.dim
       font.family: root.fontFamily
-      font.pixelSize: Style.font.caption
+      font.pixelSize: root.fontRow
     }
 
     Rectangle {
@@ -440,7 +440,7 @@ Item {
       textFormat: Text.PlainText
       color: root.dim
       font.family: root.fontFamily
-      font.pixelSize: Style.font.caption
+      font.pixelSize: root.fontRow
     }
   }
 }

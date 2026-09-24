@@ -317,7 +317,7 @@ FocusScope {
             text: Model.Glyph.podman
             color: root.podman.counts.alerting > 0 ? Color.urgent : root.foreground
             font.family: root.fontFamily
-            font.pixelSize: Style.font.display
+            font.pixelSize: root.fontHero
           }
 
           trailingControl: Row {
@@ -442,7 +442,7 @@ FocusScope {
             })
             color: root.dim
             font.family: root.fontFamily
-            font.pixelSize: Style.font.body
+            font.pixelSize: root.fontLabel
             wrapMode: Text.WordWrap
           }
 
@@ -457,7 +457,7 @@ FocusScope {
             }
             color: root.dim
             font.family: root.fontFamily
-            font.pixelSize: Style.font.caption
+            font.pixelSize: root.fontRow
             wrapMode: Text.WordWrap
             lineHeight: 1.3
           }
@@ -480,7 +480,7 @@ FocusScope {
             textFormat: Text.PlainText
             color: Color.urgent
             font.family: root.fontFamily
-            font.pixelSize: Style.font.iconSmall
+            font.pixelSize: root.fontGlyph
           }
 
           Text {
@@ -494,7 +494,7 @@ FocusScope {
             textFormat: Text.PlainText
             color: Color.urgent
             font.family: root.fontFamily
-            font.pixelSize: Style.font.caption
+            font.pixelSize: root.fontRow
             wrapMode: Text.WordWrap
           }
 
@@ -535,7 +535,7 @@ FocusScope {
               textFormat: Text.PlainText
               color: root.dim
               font.family: root.fontFamily
-              font.pixelSize: Style.font.iconSmall
+              font.pixelSize: root.fontGlyph
             }
 
             Text {
@@ -545,7 +545,7 @@ FocusScope {
               textFormat: Text.PlainText
               color: root.dim
               font.family: root.fontFamily
-              font.pixelSize: Style.font.caption
+              font.pixelSize: root.fontRow
               elide: Text.ElideRight
             }
           }

@@ -75,7 +75,7 @@ Item {
             textFormat: Text.PlainText
             color: tab.urgent ? Color.urgent : (tab.isCurrent ? root.foreground : root.dim)
             font.family: root.fontFamily
-            font.pixelSize: Style.font.iconSmall
+            font.pixelSize: root.fontGlyph
           }
 
           Text {
@@ -84,7 +84,7 @@ Item {
             textFormat: Text.PlainText
             color: tab.isCurrent ? root.foreground : root.dim
             font.family: root.fontFamily
-            font.pixelSize: Style.font.bodySmall
+            font.pixelSize: root.fontTab
             font.bold: tab.isCurrent
           }
 
@@ -95,7 +95,7 @@ Item {
             textFormat: Text.PlainText
             color: tab.urgent ? Color.urgent : root.dim
             font.family: root.fontFamily
-            font.pixelSize: Style.font.caption
+            font.pixelSize: root.fontRow
           }
         }
 
