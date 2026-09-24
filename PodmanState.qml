@@ -262,7 +262,7 @@ Item {
       root.loading = false
       root.everLoaded = true
 
-      if (code !== 0) {
+      if (!Model.commandSucceeded(code)) {
         var message = String(listErr.text || "")
         root.daemonReachable = false
         root.permissionDenied = /permission denied/i.test(message)
@@ -292,7 +292,7 @@ Item {
     stdout: StdioCollector { id: statsOut; waitForEnd: true }
 
     onExited: function(code) {
-      if (code === 0) root.stats = Model.indexStats(Model.parseJsonLines(statsOut.text))
+      if (Model.commandSucceeded(code)) root.stats = Model.indexStats(Model.parseJsonLines(statsOut.text))
     }
   }
 
@@ -305,7 +305,7 @@ Item {
     stdout: StdioCollector { id: imagesOut; waitForEnd: true }
 
     onExited: function(code) {
-      if (code === 0) root.images = Model.normalizeImages(Model.parseJsonLines(imagesOut.text))
+      if (Model.commandSucceeded(code)) root.images = Model.normalizeImages(Model.parseJsonLines(imagesOut.text))
     }
   }
 
@@ -320,7 +320,7 @@ Item {
     stdout: StdioCollector { id: volumesOut; waitForEnd: true }
 
     onExited: function(code) {
-      if (code !== 0) return
+      if (!Model.commandSucceeded(code)) return
       var parsed = Model.parseTagged(volumesOut.text)
       root.volumes = Model.normalizeVolumes(parsed.records, parsed.unused)
     }
@@ -335,7 +335,7 @@ Item {
     stdout: StdioCollector { id: networksOut; waitForEnd: true }
 
     onExited: function(code) {
-      if (code !== 0) return
+      if (!Model.commandSucceeded(code)) return
       var parsed = Model.parseTagged(networksOut.text)
       root.networks = Model.normalizeNetworks(parsed.records, parsed.unused)
     }
@@ -347,7 +347,7 @@ Item {
     stdout: StdioCollector { id: usageOut; waitForEnd: true }
 
     onExited: function(code) {
-      if (code === 0) root.usage = Model.indexUsage(Model.parseJsonLines(usageOut.text))
+      if (Model.commandSucceeded(code)) root.usage = Model.indexUsage(Model.parseJsonLines(usageOut.text))
     }
   }
 
@@ -362,7 +362,7 @@ Item {
     stdout: StdioCollector { id: volumeSizeOut; waitForEnd: true }
 
     onExited: function(code) {
-      if (code === 0 && root.showVolumeSizes) root.volumeSizes = Model.parseVolumeSizeTable(volumeSizeOut.text)
+      if (Model.commandSucceeded(code) && root.showVolumeSizes) root.volumeSizes = Model.parseVolumeSizeTable(volumeSizeOut.text)
     }
   }
 
@@ -375,6 +375,8 @@ Item {
       // Podman refuses plenty of reasonable-looking requests — a volume still
       // mounted, an image still referenced — and its reason is the only
       // useful thing the panel can say, so it says it verbatim.
+      // Not commandSucceeded: this is plain argv with no head, so there is no
+      // pipeline to truncate and any non-zero code is a real refusal (#21).
       if (code !== 0) root.lastError = Model.errorText(actionErr.text)
       // A closed menu stays loaded; it must not poll just because an action ended.
       if (root.active || root.background) root.refresh()
