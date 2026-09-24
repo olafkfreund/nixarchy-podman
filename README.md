@@ -52,18 +52,17 @@ inside either for this same list.
 | --- | --- |
 | `1` – `4` | Jump straight to a tab |
 | `h` `l` · `←` `→` | Previous / next tab |
-| `tab` | Next tab in the full-screen menu; the next bar panel in the popup |
+| `tab` `shift`+`tab` | Next or previous tab in the full-screen menu; the next bar panel in the popup |
 | `j` `k` · `↑` `↓` | Move the cursor down / up |
 | `/` | Jump into the filter box |
 | `k` `↑` | From the first row, step back up into the filter |
-| `esc` | Dismiss Podman's message, leave the filter, then close the panel |
-| `tab` | Next bar panel, from the popup; next tab, in the full-screen menu |
+| `esc` | Close the shortcut sheet, dismiss Podman's message, leave the filter, then close the panel |
 
 ### Containers
 
 | Key | Does |
 | --- | --- |
-| `enter` | Start or stop the container |
+| `enter` `space` | Start or stop the container |
 | `r` | Restart it |
 | `o` | Follow its logs in a terminal |
 | `s` | Open a shell inside it |
@@ -89,7 +88,8 @@ Both always ask first.
 | `?` | Show the shortcut sheet |
 
 Clicking works everywhere too: a row copies its identifier, the buttons at its right edge do
-what their tooltips say, and a project header starts or stops the whole project.
+what their tooltips say, and a project header starts or stops the whole project. The one that
+stops every running container asks first, and the question names what it is about to stop.
 
 ## Installation
 
@@ -141,6 +141,8 @@ opens. The one exception is hiding the bar icon, which has no meaning in the men
 ```bash
 omarchy-shell shell toggle nixarchy.podman '{}'     # the full-screen menu
 omarchy shell nixarchy.podman.bar toggle            # the bar popup
+omarchy shell nixarchy.podman.bar open              # and open / close on their own
+omarchy shell nixarchy.podman.bar close
 omarchy shell nixarchy.podman.bar tab volumes
 omarchy shell nixarchy.podman.bar refresh
 omarchy shell nixarchy.podman.bar stopAll

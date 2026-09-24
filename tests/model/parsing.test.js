@@ -102,6 +102,11 @@ test("shortImage drops the registry and the tag, but not a plain namespace", () 
   eq(Model.shortImage("shop-api"), "shop-api")
   eq(Model.shortImage("localhost:5000/thing:dev"), "thing")
   eq(Model.shortImage("sha256:f6d088e608ca5014169551e328627f70"), "sha256:f6d088e608ca")
+  // A digest pins the image: the colon inside it is not a tag delimiter (#20).
+  // The sha256: prefix goes, because the @ has already said what follows;
+  // a bare digest keeps it, as the line above asserts.
+  eq(Model.shortImage("alpine@sha256:e7d88de73db3c0f1"), "alpine@e7d88de73db3")
+  eq(Model.shortImage("ghcr.io/acme/api@sha256:abc123def4567890"), "acme/api@abc123def456")
   eq(Model.shortImage(""), "")
 })
 
@@ -181,4 +186,26 @@ test("an object-shaped anonymous-volume label marks the volume anonymous", () =>
   ok(v.anonymous)
   ok(Model.hasLabel({ "com.docker.volume.anonymous": "" }, "com.docker.volume.anonymous"))
   ok(!Model.hasLabel({ other: "1" }, "com.docker.volume.anonymous"))
+})
+
+// A pipeline ending in `head` reports 141 when head takes its limit and the
+// producer dies of SIGPIPE. That is truncation, not failure -- a podman that
+// genuinely fails exits with its own code (#21).
+test("truncation counts as success, a real failure does not", () => {
+  eq(Model.commandSucceeded(0), true)
+  eq(Model.commandSucceeded(141), true, "head closed the pipe on a full read")
+  eq(Model.commandSucceeded(1), false)
+  eq(Model.commandSucceeded(125), false, "podman's own code for a bad subcommand")
+  eq(Model.commandSucceeded(126), false)
+  eq(Model.commandSucceeded(137), false)
+})
+
+// Accepting 141 is only safe because a cut record is dropped rather than
+// half-read. The whole design rests on this.
+test("a record cut mid-object is dropped, the ones before it are kept", () => {
+  const whole = JSON.stringify({ ID: "a", Names: "web" })
+  const cut = whole + "\n" + JSON.stringify({ ID: "b", Names: "db" }).substring(0, 14)
+  const parsed = Model.parseJsonLines(cut)
+  eq(parsed.length, 1)
+  eq(parsed[0].Names, "web")
 })

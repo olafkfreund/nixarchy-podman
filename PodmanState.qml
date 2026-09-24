@@ -85,6 +85,9 @@ Item {
     root.lastError = ""
     refreshResources()
     refreshUsage()
+    // Stats are gated on this tab, so returning to it asks at once rather
+    // than showing blanks until the next tick.
+    refreshStats()
   }
 
   // --------------------------------------------------------------- refresh
@@ -97,6 +100,10 @@ Item {
 
   function refreshStats() {
     if (!showStats || statsProcess.running || !active) return
+    // podman stats samples every running container, and the settings text
+    // promises that cost only while the panel is open. It buys nothing while
+    // Images, Volumes or Networks is on screen (#21).
+    if (tab !== "containers") return
     if (counts.running === 0) return
     statsProcess.running = true
   }
@@ -194,6 +201,9 @@ Item {
     if (container && container.up) runAction([container.id], "restart")
   }
 
+  // The stopAll IPC verb's entry point, and only that -- Panel.qml:59. The
+  // button asks first and builds its own command (#19); a scripted caller
+  // cannot answer a dialog, so this path stays direct.
   function stopEverything() {
     var ids = []
     for (var i = 0; i < containers.length; i++) {
@@ -262,16 +272,15 @@ Item {
       root.loading = false
       root.everLoaded = true
 
-      if (code !== 0) {
+      if (!Model.commandSucceeded(code)) {
         var message = String(listErr.text || "")
         root.daemonReachable = false
         root.permissionDenied = /permission denied/i.test(message)
+        // Only what this process owns. Images, volumes, networks and usage
+        // poll on their own timers and may still be succeeding; blanking them
+        // here flashed the whole panel empty on one bad tick (#21). Each
+        // clears itself when its own query fails.
         root.containers = []
-        root.images = []
-        root.volumes = []
-        root.networks = []
-        root.volumeSizes = []
-        root.usage = ({})
         root.stats = ({})
         return
       }
@@ -292,7 +301,7 @@ Item {
     stdout: StdioCollector { id: statsOut; waitForEnd: true }
 
     onExited: function(code) {
-      if (code === 0) root.stats = Model.indexStats(Model.parseJsonLines(statsOut.text))
+      if (Model.commandSucceeded(code)) root.stats = Model.indexStats(Model.parseJsonLines(statsOut.text))
     }
   }
 
@@ -305,7 +314,7 @@ Item {
     stdout: StdioCollector { id: imagesOut; waitForEnd: true }
 
     onExited: function(code) {
-      if (code === 0) root.images = Model.normalizeImages(Model.parseJsonLines(imagesOut.text))
+      if (Model.commandSucceeded(code)) root.images = Model.normalizeImages(Model.parseJsonLines(imagesOut.text))
     }
   }
 
@@ -320,7 +329,7 @@ Item {
     stdout: StdioCollector { id: volumesOut; waitForEnd: true }
 
     onExited: function(code) {
-      if (code !== 0) return
+      if (!Model.commandSucceeded(code)) return
       var parsed = Model.parseTagged(volumesOut.text)
       root.volumes = Model.normalizeVolumes(parsed.records, parsed.unused)
     }
@@ -330,12 +339,13 @@ Item {
     id: networksProcess
     command: ["sh", "-c",
       "set -o pipefail; { podman network ls --format '{\"ID\":{{json .ID}},\"Name\":{{json .Name}}," +
-      "\"Driver\":{{json .Driver}},\"Internal\":{{json .Internal}},\"Labels\":{{json .Labels}}}' " +
+      "\"Driver\":{{json .Driver}},\"Internal\":{{json .Internal}}," +
+      "\"IPv6\":{{json .IPv6Enabled}},\"Labels\":{{json .Labels}}}' " +
       "|| exit 1; echo '#UNUSED'; podman network ls --filter dangling=true --format '{{.Name}}'; } | head -c 1M"]
     stdout: StdioCollector { id: networksOut; waitForEnd: true }
 
     onExited: function(code) {
-      if (code !== 0) return
+      if (!Model.commandSucceeded(code)) return
       var parsed = Model.parseTagged(networksOut.text)
       root.networks = Model.normalizeNetworks(parsed.records, parsed.unused)
     }
@@ -347,7 +357,7 @@ Item {
     stdout: StdioCollector { id: usageOut; waitForEnd: true }
 
     onExited: function(code) {
-      if (code === 0) root.usage = Model.indexUsage(Model.parseJsonLines(usageOut.text))
+      if (Model.commandSucceeded(code)) root.usage = Model.indexUsage(Model.parseJsonLines(usageOut.text))
     }
   }
 
@@ -362,7 +372,7 @@ Item {
     stdout: StdioCollector { id: volumeSizeOut; waitForEnd: true }
 
     onExited: function(code) {
-      if (code === 0 && root.showVolumeSizes) root.volumeSizes = Model.parseVolumeSizeTable(volumeSizeOut.text)
+      if (Model.commandSucceeded(code) && root.showVolumeSizes) root.volumeSizes = Model.parseVolumeSizeTable(volumeSizeOut.text)
     }
   }
 
@@ -375,6 +385,8 @@ Item {
       // Podman refuses plenty of reasonable-looking requests — a volume still
       // mounted, an image still referenced — and its reason is the only
       // useful thing the panel can say, so it says it verbatim.
+      // Not commandSucceeded: this is plain argv with no head, so there is no
+      // pipeline to truncate and any non-zero code is a real refusal (#21).
       if (code !== 0) root.lastError = Model.errorText(actionErr.text)
       // A closed menu stays loaded; it must not poll just because an action ended.
       if (root.active || root.background) root.refresh()

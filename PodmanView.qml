@@ -173,6 +173,14 @@ FocusScope {
     }), spec.label)
   }
 
+  function askStopAll() {
+    // The unfiltered list, like a prune (#14): a filter narrows the view, it
+    // has never narrowed what the command takes.
+    var spec = Model.stopAllSpec(root.podman.containers)
+    if (!spec) return
+    ask(spec.args, spec.message, spec.label)
+  }
+
   function closeConfirm() {
     root.confirmOpen = false
     root.pendingCommand = null
@@ -226,6 +234,9 @@ FocusScope {
     if (key === "c") { dispatch(root.podman.tab, cursorRow.id, "copy"); return }
 
     if (root.podman.tab !== "containers" || !cursorItem) return
+    // The row buttons grey out while an action is in flight; the keys did not,
+    // so a second press was swallowed with no sign it had been (#21).
+    if (root.podman.busy) return
     if (key === "o") root.podman.viewLogs(cursorItem.id)
     else if (key === "s") { if (cursorItem.up) root.podman.openShell(cursorItem.id) }
     else if (key === "r") root.podman.restartContainer(cursorItem)
@@ -328,7 +339,7 @@ FocusScope {
               foreground: root.foreground
               hoverColor: Color.urgent
               fontFamily: root.fontFamily
-              onClicked: root.podman.stopEverything()
+              onClicked: root.askStopAll()
             }
           }
         }
