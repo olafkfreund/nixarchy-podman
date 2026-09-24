@@ -576,7 +576,6 @@ function normalizeNetwork(raw, unused) {
     id: trim(raw && raw.ID),
     name: sanitize(name, 96),
     driver: sanitize(raw && raw.Driver, 24),
-    scope: sanitize(raw && raw.Scope, 16),
     project: sanitize(composeProject(labels), 32),
     internal: trim(raw && raw.Internal) === "true",
     ipv6: trim(raw && raw.IPv6) === "true",

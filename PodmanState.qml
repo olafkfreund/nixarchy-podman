@@ -330,7 +330,8 @@ Item {
     id: networksProcess
     command: ["sh", "-c",
       "set -o pipefail; { podman network ls --format '{\"ID\":{{json .ID}},\"Name\":{{json .Name}}," +
-      "\"Driver\":{{json .Driver}},\"Internal\":{{json .Internal}},\"Labels\":{{json .Labels}}}' " +
+      "\"Driver\":{{json .Driver}},\"Internal\":{{json .Internal}}," +
+      "\"IPv6\":{{json .IPv6Enabled}},\"Labels\":{{json .Labels}}}' " +
       "|| exit 1; echo '#UNUSED'; podman network ls --filter dangling=true --format '{{.Name}}'; } | head -c 1M"]
     stdout: StdioCollector { id: networksOut; waitForEnd: true }
 
