@@ -58,108 +58,124 @@ Item {
       onClicked: root.dismissed()
     }
 
-    Column {
-      anchors.left: parent.left
-      anchors.right: parent.right
-      anchors.verticalCenter: parent.verticalCenter
-      anchors.leftMargin: Style.spacing.md
-      anchors.rightMargin: Style.spacing.md
-      spacing: Style.spacing.lg
+    // Bounded by the card, so overflow has somewhere to go. `interactive` only
+    // once it actually overflows: a sheet that fits must not acquire a scroll
+    // gesture, and a reference that silently has more below is worse than one
+    // that fits -- which is why the width is fixed first (#17).
+    Flickable {
+      anchors.fill: parent
+      anchors.margins: Style.spacing.md
+      contentWidth: width
+      contentHeight: sheetColumn.implicitHeight
+      interactive: contentHeight > height
+      flickableDirection: Flickable.VerticalFlick
+      boundsBehavior: Flickable.StopAtBounds
+      clip: true
 
-      Row {
+      Column {
+        id: sheetColumn
         width: parent.width
-        spacing: Style.spacing.md
+        // Centred while it fits, top-aligned once it does not: overflow has to
+        // go downward where scrolling reaches it. Lines lost off the top give
+        // the reader no sign that anything is missing.
+        y: Math.max(0, (parent.height - implicitHeight) / 2)
+        spacing: Style.spacing.lg
 
-        Text {
-          anchors.verticalCenter: parent.verticalCenter
-          text: Model.Glyph.keyboard
-          textFormat: Text.PlainText
-          color: root.foreground
-          font.family: root.fontFamily
-          font.pixelSize: root.fontIcon
-        }
-
-        Text {
-          anchors.verticalCenter: parent.verticalCenter
-          text: "KEYBOARD"
-          textFormat: Text.PlainText
-          color: root.foreground
-          font.family: root.fontFamily
-          font.pixelSize: root.fontRow
-          font.bold: true
-          font.letterSpacing: 1.2
-        }
-      }
-
-      Repeater {
-        model: Model.shortcutGroups()
-
-        delegate: Column {
-          required property var modelData
-
+        Row {
           width: parent.width
-          spacing: Style.spacing.xs
-          topPadding: Style.spacing.xs
+          spacing: Style.spacing.md
 
-          PanelSectionHeader {
-            text: modelData.title.toUpperCase()
+          Text {
+            anchors.verticalCenter: parent.verticalCenter
+            text: Model.Glyph.keyboard
             textFormat: Text.PlainText
-            foreground: root.foreground
-            fontFamily: root.fontFamily
+            color: root.foreground
+            font.family: root.fontFamily
+            font.pixelSize: root.fontIcon
           }
 
-          Repeater {
-            model: modelData.entries
+          Text {
+            anchors.verticalCenter: parent.verticalCenter
+            text: "KEYBOARD"
+            textFormat: Text.PlainText
+            color: root.foreground
+            font.family: root.fontFamily
+            font.pixelSize: root.fontRow
+            font.bold: true
+            font.letterSpacing: 1.2
+          }
+        }
 
-            delegate: Item {
-              required property var modelData
+        Repeater {
+          model: Model.shortcutGroups()
 
-              width: parent.width
-              implicitHeight: entryText.implicitHeight + Style.spacing.xs
-              height: implicitHeight
+          delegate: Column {
+            required property var modelData
 
-              Text {
-                id: entryKeys
-                anchors.left: parent.left
-                anchors.verticalCenter: parent.verticalCenter
-                width: root.keyColumnWidth
-                text: modelData.keys
-                textFormat: Text.PlainText
-                color: Color.accent
-                font.family: root.fontFamily
-                font.pixelSize: root.fontRow
-              }
+            width: parent.width
+            spacing: Style.spacing.xs
+            topPadding: Style.spacing.xs
 
-              Text {
-                id: entryText
-                anchors.left: entryKeys.right
-                anchors.leftMargin: Style.spacing.md
-                anchors.right: parent.right
-                anchors.verticalCenter: parent.verticalCenter
-                text: modelData.text
-                textFormat: Text.PlainText
-                color: root.dim
-                font.family: root.fontFamily
-                font.pixelSize: root.fontRow
-                // Wrap, never elide: a row that loses its end is a reference
-                // entry the reader cannot use (#17).
-                wrapMode: Text.WordWrap
-                elide: Text.ElideNone
+            PanelSectionHeader {
+              text: modelData.title.toUpperCase()
+              textFormat: Text.PlainText
+              foreground: root.foreground
+              fontFamily: root.fontFamily
+            }
+
+            Repeater {
+              model: modelData.entries
+
+              delegate: Item {
+                required property var modelData
+
+                width: parent.width
+                implicitHeight: entryText.implicitHeight + Style.spacing.xs
+                height: implicitHeight
+
+                Text {
+                  id: entryKeys
+                  anchors.left: parent.left
+                  anchors.verticalCenter: parent.verticalCenter
+                  width: root.keyColumnWidth
+                  text: modelData.keys
+                  textFormat: Text.PlainText
+                  color: Color.accent
+                  font.family: root.fontFamily
+                  font.pixelSize: root.fontRow
+                }
+
+                Text {
+                  id: entryText
+                  anchors.left: entryKeys.right
+                  anchors.leftMargin: Style.spacing.md
+                  anchors.right: parent.right
+                  anchors.verticalCenter: parent.verticalCenter
+                  text: modelData.text
+                  textFormat: Text.PlainText
+                  color: root.dim
+                  font.family: root.fontFamily
+                  font.pixelSize: root.fontRow
+                  // Wrap, never elide: a row that loses its end is a reference
+                  // entry the reader cannot use (#17).
+                  wrapMode: Text.WordWrap
+                  elide: Text.ElideNone
+                }
               }
             }
           }
         }
-      }
 
-      Text {
-        width: parent.width
-        topPadding: Style.spacing.md
-        horizontalAlignment: Text.AlignHCenter
-        text: "press ? or esc to go back"
-        textFormat: Text.PlainText
-        color: root.dim
-        font.family: root.fontFamily
-        font.pixelSize: root.fontRow
+        Text {
+          width: parent.width
+          topPadding: Style.spacing.md
+          horizontalAlignment: Text.AlignHCenter
+          text: "press ? or esc to go back"
+          textFormat: Text.PlainText
+          color: root.dim
+          font.family: root.fontFamily
+          font.pixelSize: root.fontRow
+        }
       }
     }
   }
