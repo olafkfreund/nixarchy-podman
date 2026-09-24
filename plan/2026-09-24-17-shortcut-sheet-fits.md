@@ -84,6 +84,27 @@ One commit per step, citing the step number and `#17`.
 
 5. **HELD — live verification.** In Tests below; cannot be done from a build.
 
+   **Deviation, found by running it.** The spec rejected a scroll indicator on
+   the grounds that "with §1 in place the `Flickable` should engage rarely".
+   Observed live on p620, it engages in the *common* case, not rarely: the card
+   sizes to the list's content, so on an empty or short list — the menu with no
+   containers, the Networks tab with two rows — the sheet shows about seven of
+   its nineteen rows. Wrapping the two long rows adds height rather than
+   removing it, so §1 does not shrink the sheet the way the spec assumed.
+
+   What this change does deliver is real and worth merging: the content no
+   longer spills over the desktop, no line is lost above the card's top edge
+   where the reader cannot tell it is missing, and every row is reachable. But
+   the issue's stated expectation — "the sheet is always fully readable" — is
+   **not met**, so #17 should not close on this alone.
+
+   The remedy is the issue's other option, which the spec rejected for coupling
+   the overlay to the host's layout: **grow the card to the sheet's height
+   while `?` is open**. On a full-screen menu there is ample room; the card is
+   small only because the list is. That is a larger change to `Menu.qml` and
+   `PodmanView.qml` than this one, and it deserves its own pass rather than
+   being bolted on here.
+
 ## Tests
 
 ```bash
