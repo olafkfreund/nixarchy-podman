@@ -91,7 +91,7 @@ var SHORTCUTS = [
   { group: "Move", keys: "k  ↑", text: "From the first row, step back up into the filter" },
   { group: "Move", keys: "esc", text: "Dismiss Podman's message, leave the filter, then close the panel" },
 
-  { group: "Containers", keys: "enter", text: "Start or stop the container" },
+  { group: "Containers", keys: "enter  space", text: "Start or stop the container" },
   { group: "Containers", keys: "r", text: "Restart it" },
   { group: "Containers", keys: "o", text: "Follow its logs in a terminal" },
   { group: "Containers", keys: "s", text: "Open a shell inside it" },
