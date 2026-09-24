@@ -63,6 +63,8 @@ FocusScope {
   property string confirmMessage: ""
   property string confirmLabel: "Remove"
   property bool confirmOpen: false
+  // Cancel is index 0 and the default answer to every question asked here.
+  property int confirmIndex: 0
   property bool helpOpen: false
 
   property int cursorIndex: 0
@@ -167,7 +169,7 @@ FocusScope {
     root.confirmMessage = message
     root.confirmLabel = label
     // Cancel is the default answer to every question asked here.
-    confirmDialog.selectedIndex = 0
+    root.confirmIndex = 0
     root.confirmOpen = true
   }
 
@@ -633,18 +635,132 @@ FocusScope {
       onDismissed: root.helpOpen = false
     }
 
-    ConfirmDialog {
+    // The shell's ConfirmDialog, drawn here for the same reason as the hero
+    // above: it exposes no size property (ConfirmDialog.qml:79,114), so the
+    // rung cannot reach its message or its buttons. Under the old scale:
+    // transform they magnified with everything else; sized by rung they would
+    // stay at base size while the list behind them grew -- shrinking the one
+    // surface that exists to be read before something is destroyed (#19, #30).
+    // Same layout, same tokens, sized through the roles. If omarchy ever
+    // exposes those sizes, delete this and go back to ConfirmDialog.
+    Item {
       id: confirmDialog
       anchors.fill: parent
       z: 10
-      opened: root.confirmOpen
-      message: root.confirmMessage
-      confirmText: root.confirmLabel
-      background: Color.popups.background
-      foreground: root.foreground
-      fontFamily: root.fontFamily
-      onCanceled: root.closeConfirm()
-      onConfirmed: root.confirmAccepted()
+      visible: root.confirmOpen
+
+      // Called by keyRoot, which gets the key because PanelKeyCatcher goes
+      // `blocked` while a question is open.
+      function handleKey(event) {
+        if (!root.confirmOpen) return false
+        if (event.key === Qt.Key_Escape) { root.closeConfirm(); return true }
+        if (event.key === Qt.Key_Left || event.key === Qt.Key_Right
+            || event.key === Qt.Key_Tab || event.key === Qt.Key_Backtab) {
+          root.confirmIndex = root.confirmIndex === 0 ? 1 : 0
+          return true
+        }
+        if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+          if (root.confirmIndex === 0) root.closeConfirm()
+          else root.confirmAccepted()
+          return true
+        }
+        return false
+      }
+
+      Rectangle {
+        anchors.fill: parent
+        color: Util.alpha(Color.background, 0.7)
+
+        MouseArea { anchors.fill: parent; onClicked: root.closeConfirm() }
+
+        BorderSurface {
+          id: confirmCard
+          width: Math.min(parent.width - Style.space(32), Style.space(370))
+          // Grows with the wrapped message, so a narrow host does not squeeze
+          // the text into the buttons.
+          height: confirmCard.contentTopInset + confirmCard.contentBottomInset
+                  + confirmMessageText.implicitHeight + Style.space(20) + Style.space(34)
+          anchors.centerIn: parent
+          color: Color.popups.background
+          borderSpec: Border.flat(Color.accent, Style.normalBorderWidth)
+          padding: Style.space(18)
+          radius: Style.cornerRadius
+
+          MouseArea { anchors.fill: parent; onClicked: {} }
+
+          Item {
+            anchors.fill: parent
+            anchors.topMargin: confirmCard.contentTopInset
+            anchors.rightMargin: confirmCard.contentRightInset
+            anchors.bottomMargin: confirmCard.contentBottomInset
+            anchors.leftMargin: confirmCard.contentLeftInset
+
+            Text {
+              id: confirmMessageText
+              textFormat: Text.PlainText
+              anchors.left: parent.left
+              anchors.right: parent.right
+              anchors.top: parent.top
+              text: root.confirmMessage
+              color: root.foreground
+              font.family: root.fontFamily
+              font.pixelSize: root.fontIcon
+              wrapMode: Text.WordWrap
+            }
+
+            Row {
+              anchors.right: parent.right
+              anchors.bottom: parent.bottom
+              spacing: Style.space(10)
+
+              Repeater {
+                model: ["Cancel", root.confirmLabel]
+
+                BorderSurface {
+                  required property int index
+                  required property string modelData
+
+                  readonly property bool selected: root.confirmIndex === index
+                  readonly property bool destructive: index === 1
+
+                  width: Style.space(88)
+                  height: Style.space(34)
+                  color: selected
+                    ? (destructive ? Util.alpha(Color.urgent, 0.22)
+                                   : Util.alpha(root.foreground, 0.08))
+                    : "transparent"
+                  borderSpec: Border.flat(destructive
+                    ? (selected ? Color.urgent : Util.alpha(Color.urgent, 0.56))
+                    : (selected ? Color.accent : Util.alpha(root.foreground, 0.38)),
+                    Style.normalBorderWidth)
+                  radius: 0
+
+                  Text {
+                    textFormat: Text.PlainText
+                    anchors.centerIn: parent
+                    text: modelData
+                    color: destructive ? (selected ? Color.urgent : root.foreground)
+                                       : (selected ? Color.accent : root.foreground)
+                    font.family: root.fontFamily
+                    font.pixelSize: root.fontRow
+                  }
+
+                  MouseArea {
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onEntered: root.confirmIndex = index
+                    onClicked: {
+                      if (index === 0) root.closeConfirm()
+                      else root.confirmAccepted()
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }
