@@ -102,6 +102,16 @@ One commit per step, citing the step number and `#30`.
    → verify by `grep -n "ConfirmDialog" *.qml` returning nothing, and by the
    live confirmation in step 9.
 
+   **Deviation, found live by the owner.** distrobox's buttons are a fixed
+   `Style.space(88)` wide, which suits its short labels. Podman's are longer
+   ("Remove stopped", "Prune unused", "Stop all") and at the menu's rung the
+   text is 1.4x wider, so it overflowed the border on both sides. The button
+   now sizes to its label — `Math.max(Style.space(88), label.implicitWidth +
+   Style.space(22))`, same for height — and the card widens at the large rung
+   (`Style.space(520)` against the popup's 370), or a 1.4x message wraps into
+   a column. Copying a sibling's fixed dimension was the mistake; the floor is
+   kept so the small rung is unchanged.
+
 6. **`Menu.qml`: remove the transform.** Delete `uiScale`, the `scale:` and
    `transformOrigin`, and the `/ root.uiScale` divisions in `view.width`,
    `view.height`, `card.width`, `card.height` and `listMaxHeight`. Pass

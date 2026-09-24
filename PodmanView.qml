@@ -675,7 +675,8 @@ FocusScope {
 
         BorderSurface {
           id: confirmCard
-          width: Math.min(parent.width - Style.space(32), Style.space(370))
+          width: Math.min(parent.width - Style.space(32),
+                          root.large ? Style.space(520) : Style.space(370))
           // Grows with the wrapped message, so a narrow host does not squeeze
           // the text into the buttons.
           height: confirmCard.contentTopInset + confirmCard.contentBottomInset
@@ -723,8 +724,13 @@ FocusScope {
                   readonly property bool selected: root.confirmIndex === index
                   readonly property bool destructive: index === 1
 
-                  width: Style.space(88)
-                  height: Style.space(34)
+                  // Sized to its label, not a fixed width: podman's are long
+                  // ("Remove stopped", "Prune unused") and at the menu's rung
+                  // they overflowed a borrowed Style.space(88) (#30).
+                  width: Math.max(Style.space(88),
+                                  buttonLabel.implicitWidth + Style.space(22))
+                  height: Math.max(Style.space(34),
+                                   buttonLabel.implicitHeight + Style.space(14))
                   color: selected
                     ? (destructive ? Util.alpha(Color.urgent, 0.22)
                                    : Util.alpha(root.foreground, 0.08))
@@ -736,6 +742,7 @@ FocusScope {
                   radius: 0
 
                   Text {
+                    id: buttonLabel
                     textFormat: Text.PlainText
                     anchors.centerIn: parent
                     text: modelData
