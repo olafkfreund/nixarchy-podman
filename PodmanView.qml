@@ -15,6 +15,22 @@ FocusScope {
   property string defaultTab: "containers"
   property color foreground: Color.foreground
   property string fontFamily: Style.font.family
+
+  // A full-screen surface is read from further away than a bar popup, so it is
+  // drawn larger -- but by picking LARGER TOKENS, never by a factor. Each rung
+  // derives from [font] base-size, so the menu moves in step with the desktop
+  // instead of sitting a fixed percentage above it, and a theme that pins a
+  // token is honoured. Do not reintroduce a scale: transform (it magnifies
+  // after layout, so wrap and elide are computed at the wrong size) or a flat
+  // multiplier (#30). nix flake check fails on either.
+  property bool large: false
+
+  readonly property int fontRow:   large ? Style.font.title        : Style.font.caption
+  readonly property int fontGlyph: large ? Style.font.title        : Style.font.iconSmall
+  readonly property int fontLabel: large ? Style.font.heading      : Style.font.body
+  readonly property int fontTab:   large ? Style.font.title        : Style.font.bodySmall
+  readonly property int fontIcon:  large ? Style.font.heading      : Style.font.icon
+  readonly property int fontHero:  large ? Style.font.displayLarge : Style.font.display
   readonly property color dim: Qt.darker(foreground, 1.5)
 
   // KeyboardPanel focuses this directly: handing it the FocusScope instead
@@ -47,6 +63,8 @@ FocusScope {
   property string confirmMessage: ""
   property string confirmLabel: "Remove"
   property bool confirmOpen: false
+  // Cancel is index 0 and the default answer to every question asked here.
+  property int confirmIndex: 0
   property bool helpOpen: false
 
   property int cursorIndex: 0
@@ -151,7 +169,7 @@ FocusScope {
     root.confirmMessage = message
     root.confirmLabel = label
     // Cancel is the default answer to every question asked here.
-    confirmDialog.selectedIndex = 0
+    root.confirmIndex = 0
     root.confirmOpen = true
   }
 
@@ -289,25 +307,72 @@ FocusScope {
         anchors.fill: parent
         spacing: Style.spacing.panelGap
 
-        PanelHero {
+        // The shell's PanelHero, drawn here instead of used, because its title
+        // and meta font sizes are internal (PanelHero.qml:57,84,98) and cannot
+        // be reached from outside. Under the old scale: transform they
+        // magnified with everything else; sized by rung they would stay at base
+        // size and the header would read small against the body (#30). Same
+        // layout and the same tokens, only sized through the roles. If omarchy
+        // ever exposes those sizes, delete this and go back to PanelHero.
+        Item {
           id: hero
-          title: "Podman"
-          meta: Model.summaryText(root.podman.containers, root.podman.daemonReachable)
-          foreground: root.foreground
-          fontFamily: root.fontFamily
-          iconOpacity: root.podman.counts.running > 0 ? 1.0 : 0.5
+          width: parent.width
+          implicitHeight: Math.max(heroIcon.implicitHeight, heroLabels.implicitHeight,
+                                   heroTrailing.implicitHeight)
 
-          iconComponent: Text {
+          Text {
+            id: heroIcon
+            anchors.left: parent.left
+            anchors.verticalCenter: parent.verticalCenter
             text: Model.Glyph.podman
             color: root.podman.counts.alerting > 0 ? Color.urgent : root.foreground
+            opacity: root.podman.counts.running > 0 ? 1.0 : 0.5
             font.family: root.fontFamily
-            font.pixelSize: Style.font.display
+            font.pixelSize: root.fontHero
           }
 
-          trailingControl: Row {
+          Column {
+            id: heroLabels
+            anchors.left: heroIcon.right
+            anchors.leftMargin: Style.space(14)
+            anchors.right: parent.right
+            anchors.rightMargin: heroTrailing.width + Style.space(12)
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: Style.space(2)
+
+            Text {
+              textFormat: Text.PlainText
+              width: parent.width
+              text: "Podman"
+              color: root.foreground
+              font.family: root.fontFamily
+              font.pixelSize: root.fontIcon
+              font.bold: true
+              elide: Text.ElideRight
+            }
+
+            Text {
+              textFormat: Text.PlainText
+              width: parent.width
+              text: Model.summaryText(root.podman.containers, root.podman.daemonReachable).toUpperCase()
+              visible: text !== ""
+              color: Qt.darker(root.foreground, 1.5)
+              font.family: root.fontFamily
+              font.pixelSize: root.fontRow
+              font.bold: true
+              font.letterSpacing: 1.2
+              elide: Text.ElideRight
+            }
+          }
+
+          Row {
+            id: heroTrailing
+            anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
             spacing: Style.spacing.sm
 
             PanelActionButton {
+              fontSize: root.fontIcon
               iconText: Model.Glyph.keyboard
               tooltipText: "Keyboard shortcuts  (?)"
               foreground: root.foreground
@@ -316,6 +381,7 @@ FocusScope {
             }
 
             PanelActionButton {
+              fontSize: root.fontIcon
               iconText: Model.Glyph.refresh
               tooltipText: "Refresh  (u)"
               foreground: root.foreground
@@ -333,6 +399,7 @@ FocusScope {
             }
 
             PanelActionButton {
+              fontSize: root.fontIcon
               visible: root.podman.tab === "containers" && root.podman.counts.running > 0
               iconText: Model.Glyph.stop
               tooltipText: "Stop every running container"
@@ -345,6 +412,9 @@ FocusScope {
         }
 
         TabStrip {
+          fontRow: root.fontRow
+          fontGlyph: root.fontGlyph
+          fontTab: root.fontTab
           id: tabStrip
           width: parent.width
           current: root.podman.tab
@@ -379,6 +449,9 @@ FocusScope {
         }
 
         ResourceList {
+          fontRow: root.fontRow
+          fontGlyph: root.fontGlyph
+          fontLabel: root.fontLabel
           id: list
           width: parent.width
           maxHeight: root.listMaxHeight
@@ -420,7 +493,7 @@ FocusScope {
             })
             color: root.dim
             font.family: root.fontFamily
-            font.pixelSize: Style.font.body
+            font.pixelSize: root.fontLabel
             wrapMode: Text.WordWrap
           }
 
@@ -435,7 +508,7 @@ FocusScope {
             }
             color: root.dim
             font.family: root.fontFamily
-            font.pixelSize: Style.font.caption
+            font.pixelSize: root.fontRow
             wrapMode: Text.WordWrap
             lineHeight: 1.3
           }
@@ -458,7 +531,7 @@ FocusScope {
             textFormat: Text.PlainText
             color: Color.urgent
             font.family: root.fontFamily
-            font.pixelSize: Style.font.iconSmall
+            font.pixelSize: root.fontGlyph
           }
 
           Text {
@@ -472,7 +545,7 @@ FocusScope {
             textFormat: Text.PlainText
             color: Color.urgent
             font.family: root.fontFamily
-            font.pixelSize: Style.font.caption
+            font.pixelSize: root.fontRow
             wrapMode: Text.WordWrap
           }
 
@@ -513,7 +586,7 @@ FocusScope {
               textFormat: Text.PlainText
               color: root.dim
               font.family: root.fontFamily
-              font.pixelSize: Style.font.iconSmall
+              font.pixelSize: root.fontGlyph
             }
 
             Text {
@@ -523,7 +596,7 @@ FocusScope {
               textFormat: Text.PlainText
               color: root.dim
               font.family: root.fontFamily
-              font.pixelSize: Style.font.caption
+              font.pixelSize: root.fontRow
               elide: Text.ElideRight
             }
           }
@@ -550,6 +623,8 @@ FocusScope {
     }
 
     ShortcutSheet {
+      fontRow: root.fontRow
+      fontIcon: root.fontIcon
       id: helpSheet
       anchors.fill: parent
       z: 5
@@ -560,18 +635,139 @@ FocusScope {
       onDismissed: root.helpOpen = false
     }
 
-    ConfirmDialog {
+    // The shell's ConfirmDialog, drawn here for the same reason as the hero
+    // above: it exposes no size property (ConfirmDialog.qml:79,114), so the
+    // rung cannot reach its message or its buttons. Under the old scale:
+    // transform they magnified with everything else; sized by rung they would
+    // stay at base size while the list behind them grew -- shrinking the one
+    // surface that exists to be read before something is destroyed (#19, #30).
+    // Same layout, same tokens, sized through the roles. If omarchy ever
+    // exposes those sizes, delete this and go back to ConfirmDialog.
+    Item {
       id: confirmDialog
       anchors.fill: parent
       z: 10
-      opened: root.confirmOpen
-      message: root.confirmMessage
-      confirmText: root.confirmLabel
-      background: Color.popups.background
-      foreground: root.foreground
-      fontFamily: root.fontFamily
-      onCanceled: root.closeConfirm()
-      onConfirmed: root.confirmAccepted()
+      visible: root.confirmOpen
+
+      // Called by keyRoot, which gets the key because PanelKeyCatcher goes
+      // `blocked` while a question is open.
+      function handleKey(event) {
+        if (!root.confirmOpen) return false
+        if (event.key === Qt.Key_Escape) { root.closeConfirm(); return true }
+        if (event.key === Qt.Key_Left || event.key === Qt.Key_Right
+            || event.key === Qt.Key_Tab || event.key === Qt.Key_Backtab) {
+          root.confirmIndex = root.confirmIndex === 0 ? 1 : 0
+          return true
+        }
+        if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+          if (root.confirmIndex === 0) root.closeConfirm()
+          else root.confirmAccepted()
+          return true
+        }
+        return false
+      }
+
+      Rectangle {
+        anchors.fill: parent
+        color: Util.alpha(Color.background, 0.7)
+
+        MouseArea { anchors.fill: parent; onClicked: root.closeConfirm() }
+
+        BorderSurface {
+          id: confirmCard
+          width: Math.min(parent.width - Style.space(32),
+                          root.large ? Style.space(520) : Style.space(370))
+          // Grows with the wrapped message, so a narrow host does not squeeze
+          // the text into the buttons.
+          height: confirmCard.contentTopInset + confirmCard.contentBottomInset
+                  + confirmMessageText.implicitHeight + Style.space(20) + Style.space(34)
+          anchors.centerIn: parent
+          color: Color.popups.background
+          borderSpec: Border.flat(Color.accent, Style.normalBorderWidth)
+          padding: Style.space(18)
+          radius: Style.cornerRadius
+
+          MouseArea { anchors.fill: parent; onClicked: {} }
+
+          Item {
+            anchors.fill: parent
+            anchors.topMargin: confirmCard.contentTopInset
+            anchors.rightMargin: confirmCard.contentRightInset
+            anchors.bottomMargin: confirmCard.contentBottomInset
+            anchors.leftMargin: confirmCard.contentLeftInset
+
+            Text {
+              id: confirmMessageText
+              textFormat: Text.PlainText
+              anchors.left: parent.left
+              anchors.right: parent.right
+              anchors.top: parent.top
+              text: root.confirmMessage
+              color: root.foreground
+              font.family: root.fontFamily
+              font.pixelSize: root.fontIcon
+              wrapMode: Text.WordWrap
+            }
+
+            Row {
+              anchors.right: parent.right
+              anchors.bottom: parent.bottom
+              spacing: Style.space(10)
+
+              Repeater {
+                model: ["Cancel", root.confirmLabel]
+
+                BorderSurface {
+                  required property int index
+                  required property string modelData
+
+                  readonly property bool selected: root.confirmIndex === index
+                  readonly property bool destructive: index === 1
+
+                  // Sized to its label, not a fixed width: podman's are long
+                  // ("Remove stopped", "Prune unused") and at the menu's rung
+                  // they overflowed a borrowed Style.space(88) (#30).
+                  width: Math.max(Style.space(88),
+                                  buttonLabel.implicitWidth + Style.space(22))
+                  height: Math.max(Style.space(34),
+                                   buttonLabel.implicitHeight + Style.space(14))
+                  color: selected
+                    ? (destructive ? Util.alpha(Color.urgent, 0.22)
+                                   : Util.alpha(root.foreground, 0.08))
+                    : "transparent"
+                  borderSpec: Border.flat(destructive
+                    ? (selected ? Color.urgent : Util.alpha(Color.urgent, 0.56))
+                    : (selected ? Color.accent : Util.alpha(root.foreground, 0.38)),
+                    Style.normalBorderWidth)
+                  radius: 0
+
+                  Text {
+                    id: buttonLabel
+                    textFormat: Text.PlainText
+                    anchors.centerIn: parent
+                    text: modelData
+                    color: destructive ? (selected ? Color.urgent : root.foreground)
+                                       : (selected ? Color.accent : root.foreground)
+                    font.family: root.fontFamily
+                    font.pixelSize: root.fontRow
+                  }
+
+                  MouseArea {
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onEntered: root.confirmIndex = index
+                    onClicked: {
+                      if (index === 0) root.closeConfirm()
+                      else root.confirmAccepted()
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

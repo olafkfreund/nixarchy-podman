@@ -13,6 +13,9 @@ Item {
   property color foreground: Color.foreground
   property color background: Color.popups.background
   property string fontFamily: Style.font.family
+  // Sized by the host's rung, not a factor (#30).
+  property int fontRow: Style.font.caption
+  property int fontIcon: Style.font.icon
 
   readonly property color dim: Qt.darker(foreground, 1.5)
 
@@ -47,7 +50,7 @@ Item {
           textFormat: Text.PlainText
           color: root.foreground
           font.family: root.fontFamily
-          font.pixelSize: Style.font.icon
+          font.pixelSize: root.fontIcon
         }
 
         Text {
@@ -56,7 +59,7 @@ Item {
           textFormat: Text.PlainText
           color: root.foreground
           font.family: root.fontFamily
-          font.pixelSize: Style.font.caption
+          font.pixelSize: root.fontRow
           font.bold: true
           font.letterSpacing: 1.2
         }
@@ -98,7 +101,7 @@ Item {
                 textFormat: Text.PlainText
                 color: Color.accent
                 font.family: root.fontFamily
-                font.pixelSize: Style.font.caption
+                font.pixelSize: root.fontRow
               }
 
               Text {
@@ -111,7 +114,7 @@ Item {
                 textFormat: Text.PlainText
                 color: root.dim
                 font.family: root.fontFamily
-                font.pixelSize: Style.font.caption
+                font.pixelSize: root.fontRow
                 elide: Text.ElideRight
               }
             }
@@ -127,7 +130,7 @@ Item {
         textFormat: Text.PlainText
         color: root.dim
         font.family: root.fontFamily
-        font.pixelSize: Style.font.caption
+        font.pixelSize: root.fontRow
       }
     }
   }

@@ -16,6 +16,10 @@ Item {
   property bool alerting: false
   property color foreground: Color.foreground
   property string fontFamily: Style.font.family
+  // Sized by the host's rung, not a factor (#30).
+  property int fontRow: Style.font.caption
+  property int fontGlyph: Style.font.iconSmall
+  property int fontTab: Style.font.bodySmall
 
   readonly property color dim: Qt.darker(foreground, 1.5)
   readonly property int columnWidth: Math.floor(width / Model.TABS.length)
@@ -71,7 +75,7 @@ Item {
             textFormat: Text.PlainText
             color: tab.urgent ? Color.urgent : (tab.isCurrent ? root.foreground : root.dim)
             font.family: root.fontFamily
-            font.pixelSize: Style.font.iconSmall
+            font.pixelSize: root.fontGlyph
           }
 
           Text {
@@ -80,7 +84,7 @@ Item {
             textFormat: Text.PlainText
             color: tab.isCurrent ? root.foreground : root.dim
             font.family: root.fontFamily
-            font.pixelSize: Style.font.bodySmall
+            font.pixelSize: root.fontTab
             font.bold: tab.isCurrent
           }
 
@@ -91,7 +95,7 @@ Item {
             textFormat: Text.PlainText
             color: tab.urgent ? Color.urgent : root.dim
             font.family: root.fontFamily
-            font.pixelSize: Style.font.caption
+            font.pixelSize: root.fontRow
           }
         }
 

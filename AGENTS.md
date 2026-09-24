@@ -121,6 +121,15 @@ Each rule records a real failure or a hard constraint:
   never 141 — use `Model.commandSucceeded` rather than testing for 0 (#21).
 - **Lists read through a QObject `var` property are Qt sequence wrappers, not JS
   arrays.** Check `length`, not `Array.isArray` (see `Model.settingsFor`).
+- **The menu is drawn larger by picking larger tokens, never by a factor.**
+  `PodmanView` takes `large: true` from `Menu.qml` and moves each text role up a
+  rung of the shell's ladder; the bar popup keeps the base rungs. A `scale:`
+  transform magnifies after layout, so wrap and elide are computed at the wrong
+  size and content below the list is clipped unreachably; a flat multiplier
+  keeps the surface a fixed percentage above every other one at every text size
+  and overrides a pinned theme token. `nix flake check` fails on either. The
+  shell's `PanelHero` and `ConfirmDialog` are drawn locally because their sizes
+  are internal — delete those copies if omarchy ever exposes a `fontSize`.
 - **The menu is keep-loaded.** `open()` must reset the view's state, drop the filter
   field's focus and refocus the key catcher; otherwise the next keys land in a stale
   filter.
