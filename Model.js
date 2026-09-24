@@ -720,7 +720,7 @@ function filterResources(resources, query) {
 
 function compareContainers(a, b) {
   if (a.up !== b.up) return a.up ? -1 : 1
-  if (!a.up && a.failing !== b.failing) return a.failing ? -1 : 1
+  if (a.failing !== b.failing) return a.failing ? -1 : 1
   return a.name < b.name ? -1 : (a.name > b.name ? 1 : 0)
 }
 
