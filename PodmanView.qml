@@ -226,6 +226,9 @@ FocusScope {
     if (key === "c") { dispatch(root.podman.tab, cursorRow.id, "copy"); return }
 
     if (root.podman.tab !== "containers" || !cursorItem) return
+    // The row buttons grey out while an action is in flight; the keys did not,
+    // so a second press was swallowed with no sign it had been (#21).
+    if (root.podman.busy) return
     if (key === "o") root.podman.viewLogs(cursorItem.id)
     else if (key === "s") { if (cursorItem.up) root.podman.openShell(cursorItem.id) }
     else if (key === "r") root.podman.restartContainer(cursorItem)

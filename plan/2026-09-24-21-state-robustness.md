@@ -99,12 +99,37 @@ One commit per step, each citing the step number and `#21`.
    → verify by `grep -rn "scope" Model.js *.qml` finding no network `scope`,
    and by running the amended shell command directly.
 
-5. **`PodmanState.qml` and `PodmanView.qml`: the busy guards.**
-   In `runAction`, move the assignment after the guard by adding
-   `actionProcess.running` to its own early return (already present) and
-   leaving `runCommand`'s guard alone. In `PodmanView.qml`'s `handleTextKey`,
-   add `if (root.podman.busy) return` before the container-verb block at
-   `:228`, so `o`, `s`, `r` and `n` match the greyed buttons.
+5. **`PodmanView.qml`: the busy guard.**
+
+   **Deviation: half of this step was based on a defect that does not exist.**
+   The intent and spec both state that `runAction` sets `root.pendingId`
+   before checking `actionProcess.running`, so a dropped action moves the busy
+   marker to the wrong row. It does not. On untouched `master`, `runAction`
+   reads:
+
+   ```js
+   function runAction(ids, verb) {
+     if (!ids || ids.length === 0 || actionProcess.running) return
+     root.pendingId = ids.length === 1 ? ids[0] : ""
+     runCommand(["podman", verb].concat(ids))
+   }
+   ```
+
+   The guard precedes the assignment, so a second action returns before
+   `pendingId` is touched and no marker moves. The claim came from a review
+   agent and was carried into the artifacts without that line ordering being
+   checked. `PodmanState.qml` needs no change here.
+
+   What is real is the missing feedback: `handleTextKey` does not gate on
+   `root.podman.busy` where the row buttons do, so a second keypress is
+   swallowed with no sign it happened. Add, before the container-verb block:
+
+   ```js
+   if (root.podman.busy) return
+   ```
+
+   placed after the `tab !== "containers" || !cursorItem` check, so `c` (copy)
+   is unaffected — copying is not an action and has its own process.
 
    Place it after the `cursorActive`/`cursorRow` check so `c` (copy) is
    unaffected — copying is not an action and has its own process.
