@@ -577,3 +577,27 @@ test("every prune is a command Podman 5 accepts, and none reaches past unused", 
   eq(Model.pruneSpec("volumes").args, ["podman", "volume", "prune", "-f"])
   eq(Model.pruneSpec("networks").args, ["podman", "network", "prune", "-f"])
 })
+
+// canPrune read item.inUse, which containers never carry, so !undefined lit
+// the button on a tab with nothing to take (#20). The bug survived because
+// no test ever passed "containers".
+test("prune is dark on a containers tab with nothing stopped", () => {
+  const running = [make("web", "", "running"), make("db", "", "running")]
+  eq(Model.canPrune("containers", {}, running), false)
+
+  // df counts a paused container as reclaimable; container prune does not
+  // take it (#14), so the list is the only authority here.
+  const dirty = Model.indexUsage([
+    { Type: "Containers", Size: "1GB", Reclaimable: "500MB (50%)" }
+  ])
+  eq(Model.canPrune("containers", dirty, running), false)
+  eq(Model.canPrune("containers", dirty, [make("held", "", "paused")]), false)
+
+  eq(Model.canPrune("containers", {}, [make("old", "", "exited")]), true)
+})
+
+test("canPrune and the question that names what goes never disagree", () => {
+  const mixed = [make("web", "", "running"), make("old", "", "exited")]
+  eq(Model.canPrune("containers", {}, mixed),
+     Model.pruneTargets("containers", mixed).length > 0)
+})

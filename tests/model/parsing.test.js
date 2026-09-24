@@ -102,6 +102,11 @@ test("shortImage drops the registry and the tag, but not a plain namespace", () 
   eq(Model.shortImage("shop-api"), "shop-api")
   eq(Model.shortImage("localhost:5000/thing:dev"), "thing")
   eq(Model.shortImage("sha256:f6d088e608ca5014169551e328627f70"), "sha256:f6d088e608ca")
+  // A digest pins the image: the colon inside it is not a tag delimiter (#20).
+  // The sha256: prefix goes, because the @ has already said what follows;
+  // a bare digest keeps it, as the line above asserts.
+  eq(Model.shortImage("alpine@sha256:e7d88de73db3c0f1"), "alpine@e7d88de73db3")
+  eq(Model.shortImage("ghcr.io/acme/api@sha256:abc123def4567890"), "acme/api@abc123def456")
   eq(Model.shortImage(""), "")
 })
 

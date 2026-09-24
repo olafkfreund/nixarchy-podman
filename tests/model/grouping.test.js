@@ -115,3 +115,20 @@ test("containers whose labels arrive as an object group under their project (#10
   eq(sections.map(s => s.title), ["demo-shop"])
   eq(sections[0].total, 2)
 })
+
+// The header says "1 needs attention"; the list should put it where
+// attention goes. Before #20 only stopped failures floated, so an unhealthy
+// running container sat in the alphabet among its healthy neighbours.
+test("an unhealthy container floats to the top of its project, running or not", () => {
+  const unhealthy = make("zeta", "shop", "running", { Status: "Up 2 hours (unhealthy)" })
+  const healthy = make("alpha", "shop", "running")
+  const sections = Model.sectionsFor([healthy, unhealthy])
+  eq(sections[0].items.map(c => c.name), ["zeta", "alpha"])
+})
+
+test("running still outranks failing, so a healthy one beats a stopped failure", () => {
+  const healthy = make("zeta", "shop", "running")
+  const crashed = make("alpha", "shop", "exited", { Status: "Exited (1) 1 hour ago" })
+  const sections = Model.sectionsFor([crashed, healthy])
+  eq(sections[0].items.map(c => c.name), ["zeta", "alpha"])
+})

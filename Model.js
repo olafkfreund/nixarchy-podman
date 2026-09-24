@@ -404,6 +404,9 @@ function shortImage(image) {
       value = value.substring(slash + 1)
     }
   }
+  // A digest pins the image; the colon inside it is not a tag delimiter.
+  var at = value.indexOf("@")
+  if (at > 0) return value.substring(0, at) + "@" + shortId(value.substring(at + 1))
   var colon = value.lastIndexOf(":")
   if (colon > 0 && value.indexOf("/", colon) === -1) value = value.substring(0, colon)
   return value
@@ -728,7 +731,7 @@ function filterResources(resources, query) {
 
 function compareContainers(a, b) {
   if (a.up !== b.up) return a.up ? -1 : 1
-  if (!a.up && a.failing !== b.failing) return a.failing ? -1 : 1
+  if (a.failing !== b.failing) return a.failing ? -1 : 1
   return a.name < b.name ? -1 : (a.name > b.name ? 1 : 0)
 }
 
@@ -1168,22 +1171,17 @@ function stopAllSpec(containers) {
   }
 }
 
-// True only when Podman has told us there is something to reclaim, so the
-// button is never live on a tab that is already clean.
+// One definition of "prunable", shared with the question that names what
+// goes: pruneTargets. df is a fast path for the disk-backed tabs only -- on
+// containers it counts paused ones as reclaimable where prune leaves them
+// alone (#14), so that tab trusts the list and nothing else. Never live on a
+// tab that is already clean.
 function canPrune(tabKey, usage, items) {
-  var list = items || []
-  if (tabKey === "networks") {
-    for (var i = 0; i < list.length; i++) {
-      if (!list[i].inUse) return true
-    }
-    return false
+  if (tabKey !== "containers") {
+    var entry = usageFor(usage, tabKey)
+    if (entry && entry.reclaimableBytes > 0) return true
   }
-  var entry = usageFor(usage, tabKey)
-  if (entry && entry.reclaimableBytes > 0) return true
-  for (var j = 0; j < list.length; j++) {
-    if (!list[j].inUse) return true
-  }
-  return false
+  return pruneTargets(tabKey, items || []).length > 0
 }
 
 function removeMessage(kind, item) {
