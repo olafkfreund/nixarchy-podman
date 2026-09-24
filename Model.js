@@ -1132,22 +1132,17 @@ function pruneMessage(tabKey, list, opts) {
   return "Remove " + plural(targets.length, noun) + ": " + named + "?" + warning + filterNote
 }
 
-// True only when Podman has told us there is something to reclaim, so the
-// button is never live on a tab that is already clean.
+// One definition of "prunable", shared with the question that names what
+// goes: pruneTargets. df is a fast path for the disk-backed tabs only -- on
+// containers it counts paused ones as reclaimable where prune leaves them
+// alone (#14), so that tab trusts the list and nothing else. Never live on a
+// tab that is already clean.
 function canPrune(tabKey, usage, items) {
-  var list = items || []
-  if (tabKey === "networks") {
-    for (var i = 0; i < list.length; i++) {
-      if (!list[i].inUse) return true
-    }
-    return false
+  if (tabKey !== "containers") {
+    var entry = usageFor(usage, tabKey)
+    if (entry && entry.reclaimableBytes > 0) return true
   }
-  var entry = usageFor(usage, tabKey)
-  if (entry && entry.reclaimableBytes > 0) return true
-  for (var j = 0; j < list.length; j++) {
-    if (!list[j].inUse) return true
-  }
-  return false
+  return pruneTargets(tabKey, items || []).length > 0
 }
 
 function removeMessage(kind, item) {
