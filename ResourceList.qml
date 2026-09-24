@@ -41,7 +41,6 @@ Item {
   readonly property bool pointerInside: listHover.hovered
 
   signal actionRequested(string kind, string id, string verb)
-  signal activated(string id)
   signal rowClicked(string id)
   signal sectionToggled(string sectionKey)
   signal cursorRequested(int index)
