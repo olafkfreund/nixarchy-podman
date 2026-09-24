@@ -143,10 +143,18 @@ One commit per step, each citing the step number and `#19`.
 
    → verify by `node -e` printing the Containers group.
 
-6. **`README.md`: match `SHORTCUTS` exactly.** Line 66,
+6. **`README.md`: match `SHORTCUTS`.** Line 66,
    `| `enter` | Start or stop the container |`, becomes
-   `| `enter`  `space` | Start or stop the container |`. `Model.js:83-84`
-   claims the README quotes `SHORTCUTS`, so this must be character-for-character.
+   `| `enter` `space` | Start or stop the container |`.
+
+   **Deviation from the drafted plan:** this step originally said the two must
+   agree "character-for-character". They cannot and never have. The README
+   renders each key in backticks and separates groups of equivalents with
+   `·` (`| `h` `l` · `←` `→` |`), while `SHORTCUTS` holds the plain string
+   `"h  l  ← →"`. What `Model.js:83-84` means is that the README lists the
+   same keys with the same meanings, not that the strings are identical. The
+   convention to follow is the existing one: a single space between
+   equivalent keys (`| `k` `↑` |`), `·` between groups.
 
    Also extend the header-buttons sentence at `README.md:91-92` to say the
    stop-everything button asks first and names what it will stop.
