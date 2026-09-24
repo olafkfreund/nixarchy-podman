@@ -116,7 +116,7 @@ One commit per step, citing the step number and `#24`.
 
 5. **Open the CI issue** for the `permissions:` block and SHA pins, referenced
    from #24 and not implemented here.
-   → verify by the issue URL.
+   → verify by the issue URL. Opened as #31.
 
 ## Tests
 
