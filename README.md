@@ -57,7 +57,6 @@ inside either for this same list.
 | `/` | Jump into the filter box |
 | `k` `↑` | From the first row, step back up into the filter |
 | `esc` | Dismiss Podman's message, leave the filter, then close the panel |
-| `tab` | Next bar panel, from the popup; next tab, in the full-screen menu |
 
 ### Containers
 
