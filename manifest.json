@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "nixarchy.podman",
   "name": "Podman",
-  "version": "0.2.0",
+  "version": "1.0.0",
   "author": "olafkfreund (nixarchy port); Abdullah Mansoor (OmaPodman, upstream)",
   "license": "MIT",
   "description": "Podman for Omarchy, on the bar and on a key: containers, images, volumes and networks on four tabs. Live CPU and memory, start/stop/restart, logs and a shell without a terminal, and one keystroke to reclaim whatever nothing is using. Opens as a bar popup or as a full-screen keyboard menu.",
