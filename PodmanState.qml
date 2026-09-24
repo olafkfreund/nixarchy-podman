@@ -85,6 +85,9 @@ Item {
     root.lastError = ""
     refreshResources()
     refreshUsage()
+    // Stats are gated on this tab, so returning to it asks at once rather
+    // than showing blanks until the next tick.
+    refreshStats()
   }
 
   // --------------------------------------------------------------- refresh
@@ -97,6 +100,10 @@ Item {
 
   function refreshStats() {
     if (!showStats || statsProcess.running || !active) return
+    // podman stats samples every running container, and the settings text
+    // promises that cost only while the panel is open. It buys nothing while
+    // Images, Volumes or Networks is on screen (#21).
+    if (tab !== "containers") return
     if (counts.running === 0) return
     statsProcess.running = true
   }
@@ -266,12 +273,11 @@ Item {
         var message = String(listErr.text || "")
         root.daemonReachable = false
         root.permissionDenied = /permission denied/i.test(message)
+        // Only what this process owns. Images, volumes, networks and usage
+        // poll on their own timers and may still be succeeding; blanking them
+        // here flashed the whole panel empty on one bad tick (#21). Each
+        // clears itself when its own query fails.
         root.containers = []
-        root.images = []
-        root.volumes = []
-        root.networks = []
-        root.volumeSizes = []
-        root.usage = ({})
         root.stats = ({})
         return
       }
