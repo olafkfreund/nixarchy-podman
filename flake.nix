@@ -73,7 +73,11 @@
                 and (.kinds | index("menu") and index("bar-widget"))
                 and .entryPoints.menu == "Menu.qml"
                 and .entryPoints.barWidget == "Panel.qml"
-              ' ${plugin}/manifest.json > /dev/null
+                and .keepLoaded == true
+              ' ${plugin}/manifest.json > /dev/null || {
+                echo "manifest.json: schemaVersion, id, kinds, entryPoints or keepLoaded is wrong" >&2
+                exit 1
+              }
               for f in $(jq -r '.entryPoints[]' ${plugin}/manifest.json); do
                 test -f "${plugin}/$f" || { echo "entry point $f missing from the package" >&2; exit 1; }
               done
@@ -83,14 +87,41 @@
                 echo "symlink inside the package" >&2; exit 1
               fi
 
-              # nixarchy's own plugin validation fails the rebuild on these.
-              if grep -nwE 'pacman|yay' ${plugin}/*.qml ${plugin}/*.js; then
+              # ...but the package is built by copying, so it can never hold one.
+              # `omarchy plugin add` clones this repo AS the plugin folder, so the
+              # source is what the rule is actually about. Scoped to named paths:
+              # the flake's source view includes .git (#24).
+              if [ -n "$(find ${./docs} ${./share} ${./tests} -type l)" ] \
+                 || [ -n "$(find ${./.} -maxdepth 1 -type l)" ]; then
+                echo "symlink in the repository" >&2; exit 1
+              fi
+
+              # nixarchy's own plugin validation fails the rebuild on these. Code,
+              # configuration and scripts, comments included -- naming the rule in
+              # AGENTS.md or the README is not a violation (#24).
+              if grep -nwE 'pacman|yay' ${./Model.js} ${./manifest.json} \
+                   ${./docs}/capture.sh ${./share}/*.jsonc ${plugin}/*.qml; then
                 echo "Arch package manager reference above" >&2; exit 1
               fi
 
-              # A literal colour survives a theme switch and looks wrong.
-              if grep -nE '"#[0-9a-fA-F]{3,8}"' ${plugin}/*.qml; then
+              # A literal colour survives a theme switch and looks wrong. Model.js
+              # carries all the logic and was never scanned (#24).
+              if grep -nE '"#[0-9a-fA-F]{3,8}"' ${plugin}/*.qml ${./Model.js}; then
                 echo "hardcoded colour above; use a Color.* token" >&2; exit 1
+              fi
+
+              # The pipefail rule, by the two invariants a grep can assert exactly:
+              # every head-bounded pipeline carries pipefail, and nothing tests a
+              # bare exit 0 -- a truncating head exits 141 (#21).
+              pf=$(grep -c 'set -o pipefail' ${./PodmanState.qml})
+              hd=$(grep -c 'head -c' ${./PodmanState.qml})
+              test "$pf" -eq "$hd" || {
+                echo "a head-bounded pipeline without pipefail, or the reverse" >&2
+                exit 1
+              }
+              if grep -n 'code === 0' ${./PodmanState.qml}; then
+                echo "use Model.commandSucceeded: a truncating head exits 141" >&2
+                exit 1
               fi
 
               touch "$out"
