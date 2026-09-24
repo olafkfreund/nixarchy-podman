@@ -96,7 +96,8 @@ The glyph tells you the state at a glance:
 | Red | A running container needs attention: its health check reports unhealthy, or it is restarting |
 
 Hover it for a one-line summary, such as `1 of 2 running`. Click to open the popup, and
-middle-click to refresh.
+middle-click to re-read the containers. That is the glyph's own list, not everything:
+`u` inside the panel refreshes the images, volumes and networks too.
 
 The popup has four tabs:
 
@@ -108,9 +109,9 @@ The popup has four tabs:
   would take. An image with several tags gets one row per tag, just as `podman images`
   lists it.
 
-The footer says what the tab holds and, for images and volumes, how much of it is
-reclaimable. On Networks it gives the count and how many are unused; Podman reports
-no size for them.
+The footer says what the tab holds and how much of it is reclaimable, on Containers,
+Images and Volumes alike. On Networks it gives the count and how many are unused;
+Podman reports no size for them.
 
 ## The full-screen menu
 
@@ -151,9 +152,11 @@ Both surfaces use the same keys. Press `?` inside either to see them all.
 
 | To | Do |
 | --- | --- |
-| Pick a tab | `1`–`4`, or `h` / `l`; `tab` in the full-screen menu |
+| Pick a tab | `1`–`4`, or `h` / `l`, or `←` / `→` |
+| Step through the tabs | `tab` forward, `shift`+`tab` back, in the full-screen menu; in the popup `tab` moves to the next bar panel |
+| See every shortcut | `?`. Press it again, or `esc`, to close the sheet |
 | Dismiss Podman's message | `esc` while it is showing, or its × |
-| Move the cursor | `j` / `k` |
+| Move the cursor | `j` / `k`, or `↑` / `↓` |
 | Start or stop a container | Put the cursor on it, press `enter` or `space` |
 | Restart a container | `r` |
 | Follow its logs | `o` opens them in a terminal |
