@@ -39,7 +39,7 @@ is [`docs/usage.md`](docs/usage.md).
 
 ```bash
 node tests/run.js                              # Model tests
-nix flake check                                # tests + manifest, entry points, no symlinks, no pacman/yay, no hex colours
+nix flake check                                # tests, manifest + keepLoaded, entry points, no symlinks in the repo, no pacman/yay in code, no hex colours, the pipefail invariants
 nix flake check --all-systems --no-build       # aarch64 evaluates
 nix build                                      # the plugin folder, exactly as nixarchy links it
 omarchy plugin validate "$(readlink -f result)"
@@ -106,7 +106,9 @@ Each rule records a real failure or a hard constraint:
   one. That is why `CLAUDE.md` imports `AGENTS.md` instead of linking to it.
 - **No hardcoded colours.** Use `Color.*` and `Style.*` tokens, so themes switch
   cleanly. `nix flake check` fails on `"#rrggbb"`.
-- **No `pacman` or `yay`**, not even in comments. nixarchy fails the rebuild on them.
+- **No `pacman` or `yay` in code, configuration or scripts** — comments included.
+  nixarchy fails the rebuild on them. Naming the rule in this file or the README is
+  not a violation, which is why the check scans code and not prose.
 - **A new runtime file goes in the `files` list in `flake.nix`**, or it is not in the
   package.
 - **Run external commands by name from `PATH`.** Never wrap or bundle them. A missing
