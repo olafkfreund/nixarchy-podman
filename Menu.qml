@@ -34,7 +34,15 @@ Item {
   // ponytail: one scale on the view rather than a size knob threaded through
   // every font; revisit if the view ever needs different ratios per element.
   readonly property real uiScale: 1.45
-  readonly property int viewWidth: Style.space(680)
+  // A constant slice of whatever screen it opens on, bounded so a small
+  // display stays usable and a very wide one does not become a letterbox.
+  // The bounds are theme units and grow with [font] base-size; the target is
+  // a fraction of real screen pixels, so it is not theme-scaled twice (#22).
+  readonly property int viewWidth: {
+    if (!root.targetScreen) return Style.space(680)
+    var target = Math.round(root.targetScreen.width * 0.46 / root.uiScale)
+    return Math.max(Style.space(560), Math.min(target, Style.space(820)))
+  }
 
   function focusedScreen() {
     var monitor = Hyprland.focusedMonitor
