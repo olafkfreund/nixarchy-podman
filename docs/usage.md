@@ -152,7 +152,9 @@ Both surfaces use the same keys. Press `?` inside either to see them all.
 
 | To | Do |
 | --- | --- |
-| Pick a tab | `1`–`4`, or `h` / `l`; `tab` in the full-screen menu |
+| Pick a tab | `1`–`4`, or `h` / `l`, or `←` / `→` |
+| Step through the tabs | `tab` forward, `shift`+`tab` back, in the full-screen menu; in the popup `tab` moves to the next bar panel |
+| See every shortcut | `?`. Press it again, or `esc`, to close the sheet |
 | Dismiss Podman's message | `esc` while it is showing, or its × |
 | Move the cursor | `j` / `k`, or `↑` / `↓` |
 | Start or stop a container | Put the cursor on it, press `enter` |
