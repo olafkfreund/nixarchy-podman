@@ -29,19 +29,20 @@ Item {
 
   property var settings: ({})
 
-  // A full-screen surface is read from further away than a bar popup, so the
-  // whole view is drawn larger — the same factor nixarchy-pkg's menu uses.
-  // ponytail: one scale on the view rather than a size knob threaded through
-  // every font; revisit if the view ever needs different ratios per element.
-  readonly property real uiScale: 1.45
+  // The view is drawn larger by picking larger tokens, never by a factor:
+  // `large: true` moves each of its text roles up a rung of the shell's own
+  // ladder. A scale: transform used to do this and magnified after layout, so
+  // wrap and elide were computed at the wrong size and content below the list
+  // was clipped unreachably (#30). nix flake check fails if either returns.
   // A constant slice of whatever screen it opens on, bounded so a small
-  // display stays usable and a very wide one does not become a letterbox.
-  // The bounds are theme units and grow with [font] base-size; the target is
-  // a fraction of real screen pixels, so it is not theme-scaled twice (#22).
+  // display stays usable and a very wide one does not become a letterbox. The
+  // bounds are theme units and grow with [font] base-size; the target is a
+  // fraction of real screen pixels, so it is not theme-scaled twice (#22).
+  // No longer divided by a magnification factor: the card is this width (#30).
   readonly property int viewWidth: {
-    if (!root.targetScreen) return Style.space(680)
-    var target = Math.round(root.targetScreen.width * 0.46 / root.uiScale)
-    return Math.max(Style.space(560), Math.min(target, Style.space(820)))
+    if (!root.targetScreen) return Style.space(986)
+    var target = Math.round(root.targetScreen.width * 0.46)
+    return Math.max(Style.space(800), Math.min(target, Style.space(1200)))
   }
 
   function focusedScreen() {
@@ -130,9 +131,9 @@ Item {
 
     BorderSurface {
       id: card
-      width: Math.min(Math.round(root.viewWidth * root.uiScale) + card.contentLeftInset + card.contentRightInset,
+      width: Math.min(root.viewWidth + card.contentLeftInset + card.contentRightInset,
                       Math.round(panel.width * 0.9))
-      height: Math.min(Math.round(view.implicitHeight * root.uiScale) + card.contentTopInset + card.contentBottomInset,
+      height: Math.min(view.implicitHeight + card.contentTopInset + card.contentBottomInset,
                        Math.round(panel.height * 0.85))
       anchors.horizontalCenter: parent.horizontalCenter
       // A fixed top edge: the card grows downward, so switching to a tab with
@@ -157,24 +158,19 @@ Item {
 
         PodmanView {
           id: view
-          // Laid out at its natural size, then drawn uiScale times larger;
-          // input is mapped through the same transform, so clicks still land.
-          // The cost is that wrap and elide are computed before the
-          // magnification -- a long name elides against the small width (#22).
-          // A layout-time multiplier would fix that, but ConfirmDialog,
-          // PanelHero and TextField expose no font size, so it would leave the
-          // confirmation question at theme size while the list around it grew.
-          // Uniform beats crisp here. Revisit if those gain a fontSize.
-          width: frame.width / root.uiScale
-          height: frame.height / root.uiScale
-          scale: root.uiScale
-          transformOrigin: Item.TopLeft
+          // Fills its frame and lays out at the size it is drawn, so wrapping
+          // and eliding are computed against what the reader sees.
+          anchors.fill: parent
+          large: true
           podman: podmanState
           // The card may take 85% of the screen; the list gets what the rest of
           // the view leaves of that, so the footer is never clipped (#10).
-          listMaxHeight: Math.max(Style.space(120), Math.min(Style.space(560),
-            Math.floor((panel.height * 0.85 - card.contentTopInset - card.contentBottomInset) / root.uiScale)
-            - view.chromeHeight))
+          // What the card's 85% leaves after the chrome. No fixed ceiling and
+          // no division: nothing is magnified past it any more, so the footer
+          // cannot be pushed out of a clipped frame (#30).
+          listMaxHeight: Math.max(Style.space(120),
+            Math.floor(panel.height * 0.85 - card.contentTopInset - card.contentBottomInset)
+            - view.chromeHeight)
           foreground: Color.foreground
           fontFamily: Style.font.family
           onCloseRequested: root.close()
