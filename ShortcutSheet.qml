@@ -1,6 +1,7 @@
 import QtQuick
 import qs.Ui
 import qs.Commons
+import qs.Commons as Commons
 import "Model.js" as Model
 
 // The `?` sheet. Omarchy is a keyboard-first shell, so the panel says out
@@ -40,8 +41,8 @@ Item {
   readonly property int wantedHeight: sheetColumn.implicitHeight + Style.spacing.md * 2
 
   property bool opened: false
-  property color foreground: Color.foreground
-  property color background: Color.popups.background
+  property color foreground: Commons.Color.foreground
+  property color background: Commons.Color.popups.background
   property string fontFamily: Style.font.family
   // Sized by the host's rung, not a factor (#30).
   property int fontRow: Style.font.caption
@@ -144,7 +145,7 @@ Item {
                   width: root.keyColumnWidth
                   text: modelData.keys
                   textFormat: Text.PlainText
-                  color: Color.accent
+                  color: Commons.Color.accent
                   font.family: root.fontFamily
                   font.pixelSize: root.fontRow
                 }

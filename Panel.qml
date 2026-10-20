@@ -3,6 +3,7 @@ import Quickshell
 import Quickshell.Io
 import qs.Ui
 import qs.Commons
+import qs.Commons as Commons
 import "Model.js" as Model
 
 // The bar widget: a badge that keeps an eye on Podman, and a keyboard popup
@@ -26,7 +27,7 @@ Panel {
     return Model.isTabKey(key) ? key : "containers"
   }
 
-  readonly property color foreground: bar ? bar.foreground : Color.foreground
+  readonly property color foreground: bar ? bar.foreground : Commons.Color.foreground
   readonly property string fontFamily: bar ? bar.fontFamily : Style.font.family
 
   PodmanState {
@@ -72,7 +73,7 @@ Panel {
     dimmed: podmanState.counts.running === 0
     active: podmanState.counts.alerting > 0 || podmanState.counts.running > 0
     useActiveColor: true
-    activeColor: podmanState.counts.alerting > 0 ? Color.urgent : Color.accent
+    activeColor: podmanState.counts.alerting > 0 ? Commons.Color.urgent : Commons.Color.accent
     tooltipText: "Podman · " + Model.summaryText(podmanState.containers, podmanState.daemonReachable)
 
     onPressed: function(b) {

@@ -3,6 +3,7 @@ import Quickshell
 import Quickshell.Hyprland
 import Quickshell.Wayland
 import qs.Commons
+import qs.Commons as Commons
 import qs.Ui
 import "Model.js" as Model
 
@@ -119,7 +120,7 @@ Item {
 
     Rectangle {
       anchors.fill: parent
-      color: Color.menu.scrim
+      color: Commons.Color.menu.scrim
     }
 
     // A click away closes, as every summoned surface here does. The card
@@ -140,8 +141,8 @@ Item {
       // more or fewer rows never moves the tabs or the filter (#13). 0.075 is
       // half of what the 0.85 height cap leaves, so the tallest card is centred.
       y: Math.max(Style.gapsOut, Math.round(panel.height * 0.075))
-      color: Color.popups.background
-      borderSpec: Border.surfaceSpec("popups", "border", Color.popups.border, Math.max(1, Style.space(2)))
+      color: Commons.Color.popups.background
+      borderSpec: Border.surfaceSpec("popups", "border", Commons.Color.popups.border, Math.max(1, Style.space(2)))
       padding: Style.spacing.popupPadding
       radius: Style.cornerRadius
 
@@ -171,7 +172,7 @@ Item {
           listMaxHeight: Math.max(Style.space(120),
             Math.floor(panel.height * 0.85 - card.contentTopInset - card.contentBottomInset)
             - view.chromeHeight)
-          foreground: Color.foreground
+          foreground: Commons.Color.foreground
           fontFamily: Style.font.family
           onCloseRequested: root.close()
           // No neighbouring bar panel to hand over to: Tab walks the tabs.

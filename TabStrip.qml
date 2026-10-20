@@ -1,6 +1,7 @@
 import QtQuick
 import qs.Ui
 import qs.Commons
+import qs.Commons as Commons
 import "Model.js" as Model
 
 // The panel's four tabs, laid out as equal columns across the full width so
@@ -14,7 +15,7 @@ Item {
   // { containers: 12, images: 43, volumes: 30, networks: 8 }
   property var counts: ({})
   property bool alerting: false
-  property color foreground: Color.foreground
+  property color foreground: Commons.Color.foreground
   property string fontFamily: Style.font.family
   // Sized by the host's rung, not a factor (#30).
   property int fontRow: Style.font.caption
@@ -73,7 +74,7 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
             text: tab.modelData.glyph
             textFormat: Text.PlainText
-            color: tab.urgent ? Color.urgent : (tab.isCurrent ? root.foreground : root.dim)
+            color: tab.urgent ? Commons.Color.urgent : (tab.isCurrent ? root.foreground : root.dim)
             font.family: root.fontFamily
             font.pixelSize: root.fontGlyph
           }
@@ -93,7 +94,7 @@ Item {
             visible: tab.count >= 0
             text: tab.count
             textFormat: Text.PlainText
-            color: tab.urgent ? Color.urgent : root.dim
+            color: tab.urgent ? Commons.Color.urgent : root.dim
             font.family: root.fontFamily
             font.pixelSize: root.fontRow
           }
@@ -107,7 +108,7 @@ Item {
           anchors.rightMargin: Style.spacing.md
           height: Style.space(2)
           radius: height / 2
-          color: tab.urgent ? Color.urgent : Color.accent
+          color: tab.urgent ? Commons.Color.urgent : Commons.Color.accent
           opacity: tab.isCurrent ? 1 : 0
 
           Behavior on opacity { NumberAnimation { duration: 120 } }
