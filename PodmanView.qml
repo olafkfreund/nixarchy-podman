@@ -3,6 +3,7 @@ import QtQuick.Controls
 import Quickshell
 import qs.Ui
 import qs.Commons
+import qs.Commons as Commons
 import "Model.js" as Model
 
 // The four tabs, the cursor, the filter, the questions — everything you can
@@ -13,7 +14,7 @@ FocusScope {
 
   required property var podman
   property string defaultTab: "containers"
-  property color foreground: Color.foreground
+  property color foreground: Commons.Color.foreground
   property string fontFamily: Style.font.family
 
   // A full-screen surface is read from further away than a bar popup, so it is
@@ -331,7 +332,7 @@ FocusScope {
             anchors.left: parent.left
             anchors.verticalCenter: parent.verticalCenter
             text: Model.Glyph.podman
-            color: root.podman.counts.alerting > 0 ? Color.urgent : root.foreground
+            color: root.podman.counts.alerting > 0 ? Commons.Color.urgent : root.foreground
             opacity: root.podman.counts.running > 0 ? 1.0 : 0.5
             font.family: root.fontFamily
             font.pixelSize: root.fontHero
@@ -410,7 +411,7 @@ FocusScope {
               iconText: Model.Glyph.stop
               tooltipText: "Stop every running container"
               foreground: root.foreground
-              hoverColor: Color.urgent
+              hoverColor: Commons.Color.urgent
               fontFamily: root.fontFamily
               onClicked: root.askStopAll()
             }
@@ -535,7 +536,7 @@ FocusScope {
             anchors.top: parent.top
             text: Model.Glyph.alert
             textFormat: Text.PlainText
-            color: Color.urgent
+            color: Commons.Color.urgent
             font.family: root.fontFamily
             font.pixelSize: root.fontGlyph
           }
@@ -549,7 +550,7 @@ FocusScope {
             anchors.top: parent.top
             text: root.podman.lastError
             textFormat: Text.PlainText
-            color: Color.urgent
+            color: Commons.Color.urgent
             font.family: root.fontFamily
             font.pixelSize: root.fontRow
             wrapMode: Text.WordWrap
@@ -636,7 +637,7 @@ FocusScope {
       z: 5
       opened: root.helpOpen
       foreground: root.foreground
-      background: Color.popups.background
+      background: Commons.Color.popups.background
       fontFamily: root.fontFamily
       onDismissed: root.helpOpen = false
     }
@@ -675,7 +676,7 @@ FocusScope {
 
       Rectangle {
         anchors.fill: parent
-        color: Util.alpha(Color.background, 0.7)
+        color: Util.alpha(Commons.Color.background, 0.7)
 
         MouseArea { anchors.fill: parent; onClicked: root.closeConfirm() }
 
@@ -688,8 +689,8 @@ FocusScope {
           height: confirmCard.contentTopInset + confirmCard.contentBottomInset
                   + confirmMessageText.implicitHeight + Style.space(20) + Style.space(34)
           anchors.centerIn: parent
-          color: Color.popups.background
-          borderSpec: Border.flat(Color.accent, Style.normalBorderWidth)
+          color: Commons.Color.popups.background
+          borderSpec: Border.flat(Commons.Color.accent, Style.normalBorderWidth)
           padding: Style.space(18)
           radius: Style.cornerRadius
 
@@ -738,12 +739,12 @@ FocusScope {
                   height: Math.max(Style.space(34),
                                    buttonLabel.implicitHeight + Style.space(14))
                   color: selected
-                    ? (destructive ? Util.alpha(Color.urgent, 0.22)
+                    ? (destructive ? Util.alpha(Commons.Color.urgent, 0.22)
                                    : Util.alpha(root.foreground, 0.08))
                     : "transparent"
                   borderSpec: Border.flat(destructive
-                    ? (selected ? Color.urgent : Util.alpha(Color.urgent, 0.56))
-                    : (selected ? Color.accent : Util.alpha(root.foreground, 0.38)),
+                    ? (selected ? Commons.Color.urgent : Util.alpha(Commons.Color.urgent, 0.56))
+                    : (selected ? Commons.Color.accent : Util.alpha(root.foreground, 0.38)),
                     Style.normalBorderWidth)
                   radius: 0
 
@@ -752,8 +753,8 @@ FocusScope {
                     textFormat: Text.PlainText
                     anchors.centerIn: parent
                     text: modelData
-                    color: destructive ? (selected ? Color.urgent : root.foreground)
-                                       : (selected ? Color.accent : root.foreground)
+                    color: destructive ? (selected ? Commons.Color.urgent : root.foreground)
+                                       : (selected ? Commons.Color.accent : root.foreground)
                     font.family: root.fontFamily
                     font.pixelSize: root.fontRow
                   }
