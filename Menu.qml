@@ -79,15 +79,28 @@ Item {
   function open(payloadJson) {
     root.settings = root.readSettings()
     PodmanState.settings = root.settings
-    if (!root.opened) PodmanState.acquire("view")
+    root.takeView()
     root.targetScreen = root.focusedScreen()
     view.defaultTab = root.tabFrom(payloadJson, root.settings.defaultTab)
     view.reset()
     root.opened = true
   }
 
+  // One lease per instance, so no path can release it twice.
+  property bool holdsView: false
+  function takeView() {
+    if (root.holdsView) return
+    root.holdsView = true
+    PodmanState.acquire("view")
+  }
+  function dropView() {
+    if (!root.holdsView) return
+    root.holdsView = false
+    PodmanState.release("view")
+  }
+
   function close() {
-    if (root.opened) PodmanState.release("view")
+    root.dropView()
     view.dismiss()
     root.opened = false
   }
@@ -98,7 +111,7 @@ Item {
   }
 
   // A host unload (toggle-close) may skip close(): release what open() took.
-  Component.onDestruction: if (root.opened) PodmanState.release("view")
+  Component.onDestruction: root.dropView()
 
   PanelWindow {
     id: panel
@@ -174,7 +187,7 @@ Item {
           onCloseRequested: root.close()
           // No neighbouring bar panel to hand over to: Tab walks the tabs.
           onSwitchPanelRequested: function(direction) {
-            PodmanState.setTab(Model.shiftTab(PodmanState.tab, direction))
+            view.setTab(Model.shiftTab(view.tab, direction))
           }
         }
       }

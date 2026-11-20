@@ -142,6 +142,13 @@
                 exit 1
               fi
 
+              # The singleton is shared by both surfaces, so it holds data and
+              # processes only: per-surface state (tab, close request) lives in
+              # PodmanView, or one surface would drive the other.
+              if grep -nE 'closeRequested|tabReset|property string tab\b' ${./PodmanState.qml}; then
+                echo "per-surface state is back in PodmanState" >&2; exit 1
+              fi
+
               touch "$out"
             '';
         });

@@ -51,15 +51,28 @@ Panel {
   }
   Component.onDestruction: {
     PodmanState.release("bar")
-    if (root.opened) PodmanState.release("view")
+    root.dropView()
+  }
+
+  // One lease per instance, so no path can release it twice.
+  property bool holdsView: false
+  function takeView() {
+    if (root.holdsView) return
+    root.holdsView = true
+    PodmanState.acquire("view")
+  }
+  function dropView() {
+    if (!root.holdsView) return
+    root.holdsView = false
+    PodmanState.release("view")
   }
 
   onOpenedChanged: {
     if (opened) {
-      PodmanState.acquire("view")
+      root.takeView()
       view.reset()
     } else {
-      PodmanState.release("view")
+      root.dropView()
       view.dismiss()
     }
   }
@@ -72,7 +85,7 @@ Panel {
     function toggle(): void { root.toggle() }
     function refresh(): void { PodmanState.refreshAll() }
     function stopAll(): void { PodmanState.stopEverything() }
-    function tab(name: string): void { PodmanState.setTab(name) }
+    function tab(name: string): void { view.setTab(name) }
   }
 
   // ------------------------------------------------------------------- bar

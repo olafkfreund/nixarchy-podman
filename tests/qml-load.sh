@@ -21,7 +21,7 @@ ShellRoot {
   Timer {
     interval: 100; running: true
     onTriggered: {
-      var files = ["PodmanView.qml", "ResourceList.qml", "TabStrip.qml", "ShortcutSheet.qml", "Menu.qml", "Panel.qml"]
+      var files = ["PodmanState.qml", "PodmanView.qml", "ResourceList.qml", "TabStrip.qml", "ShortcutSheet.qml", "Menu.qml", "Panel.qml"]
       for (var i = 0; i < files.length; i++) {
         var c = Qt.createComponent("file://" + Quickshell.env("PLUGDIR") + "/" + files[i],
                                    Component.PreferSynchronous)
@@ -43,6 +43,6 @@ while IFS= read -r line; do
     *) fail=1 ;;
   esac
 done <<< "$out"
-[[ $(grep -c '^LOAD ' <<< "$out") -eq 6 ]] || fail=1
+[[ $(grep -c '^LOAD ' <<< "$out") -eq 7 ]] || fail=1
 if (( fail != 0 )); then echo "FAIL: plugin QML does not compile"; exit 1; fi
 echo "PASS: plugin QML compiles"

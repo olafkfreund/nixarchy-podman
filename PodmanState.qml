@@ -37,10 +37,6 @@ Singleton {
     else views = Math.max(0, views - 1)
   }
 
-  signal closeRequested()
-  // Fired before `tab` changes, so the list can empty itself first.
-  signal tabReset()
-
   readonly property int refreshIntervalSec: Math.max(5, Number(settings.refreshIntervalSec || 15))
   readonly property bool showStopped: settings.showStopped !== false
   readonly property bool showStats: settings.showStats !== false
@@ -48,7 +44,9 @@ Singleton {
 
   // ------------------------------------------------------------------ state
 
-  property string tab: "containers"
+  // Which tab the most recently used view shows. Only a polling hint (stats
+  // for containers, sizes for volumes); each view keeps its own tab.
+  property string hintTab: "containers"
 
   property var containers: []
   property var images: []
@@ -62,7 +60,9 @@ Singleton {
   property bool permissionDenied: false
   property bool loading: false
   property bool everLoaded: false
-  property string lastError: ""
+  // A failed action's message, kept until a view has shown it: the action can
+  // end while no view is open. The view that takes it clears it.
+  property string pendingResult: ""
   property string pendingId: ""
 
   readonly property bool busy: actionProcess.running
@@ -73,13 +73,6 @@ Singleton {
   // arrives on its own schedule, so it is folded in here rather than stored.
   readonly property var sizedVolumes: Model.mergeVolumeUsage(volumes, showVolumeSizes ? volumeSizes : [])
 
-  readonly property var items: {
-    if (tab === "images") return images
-    if (tab === "volumes") return sizedVolumes
-    if (tab === "networks") return networks
-    return containers
-  }
-
   readonly property var counts: Model.counts(containers)
   readonly property var tabCounts: ({
     containers: containers.length,
@@ -88,18 +81,11 @@ Singleton {
     networks: networks.length
   })
 
-  readonly property string usageLine: Model.usageText(usage, tab, items)
-  readonly property bool prunable: Model.canPrune(tab, usage, items)
-
   // ------------------------------------------------------------------- tabs
 
-  function setTab(key) {
-    if (!Model.isTabKey(key) || key === root.tab) return
-    // Empty the list before the rows underneath it change, so the new tab is
-    // inserted into an empty model rather than diffed against the old one.
-    root.tabReset()
-    root.tab = key
-    root.lastError = ""
+  // A view moved to `key`: poll for what it now shows.
+  function tabChanged(key) {
+    root.hintTab = key
     refreshResources()
     refreshUsage()
     // Stats are gated on this tab, so returning to it asks at once rather
@@ -120,7 +106,7 @@ Singleton {
     // podman stats samples every running container, and the settings text
     // promises that cost only while the panel is open. It buys nothing while
     // Images, Volumes or Networks is on screen (#21).
-    if (tab !== "containers") return
+    if (hintTab !== "containers") return
     if (counts.running === 0) return
     statsProcess.running = true
   }
@@ -134,7 +120,7 @@ Singleton {
     if (!imagesProcess.running) imagesProcess.running = true
     if (!volumesProcess.running) volumesProcess.running = true
     if (!networksProcess.running) networksProcess.running = true
-    if (root.tab === "volumes") refreshVolumeSizes()
+    if (root.hintTab === "volumes") refreshVolumeSizes()
   }
 
   function refreshUsage() {
@@ -198,7 +184,7 @@ Singleton {
 
   function runCommand(command) {
     if (!command || actionProcess.running) return
-    root.lastError = ""
+    root.pendingResult = ""
     actionProcess.command = command
     actionProcess.running = true
   }
@@ -239,7 +225,6 @@ Singleton {
 
   function viewLogs(id) {
     if (!Model.isContainerId(id)) return
-    root.closeRequested()
     // The terminal is held open by the shell, not by a launcher flag: not
     // every omarchy-launch-tui out there understands --hold.
     Quickshell.execDetached(["omarchy-launch-tui", "--app-id=org.omarchy.podman-logs",
@@ -250,7 +235,6 @@ Singleton {
 
   function openShell(id) {
     if (!Model.isContainerId(id)) return
-    root.closeRequested()
     Quickshell.execDetached(["omarchy-launch-tui", "--app-id=org.omarchy.podman-shell",
       "sh", "-c",
       "podman exec -it \"$1\" sh -c 'command -v bash >/dev/null 2>&1 && exec bash || exec sh'",
@@ -258,7 +242,6 @@ Singleton {
   }
 
   function launchTui() {
-    root.closeRequested()
     Quickshell.execDetached(["omarchy-launch-or-focus-tui", "podman-tui"])
   }
 
@@ -404,12 +387,12 @@ Singleton {
       // useful thing the panel can say, so it says it verbatim.
       // Not commandSucceeded: this is plain argv with no head, so there is no
       // pipeline to truncate and any non-zero code is a real refusal (#21).
-      if (code !== 0) root.lastError = Model.errorText(actionErr.text)
+      if (code !== 0) root.pendingResult = Model.errorText(actionErr.text)
       // Nothing open and no bar: do not poll just because an action ended.
       if (root.active || root.background) root.refresh()
       root.refreshResources()
       root.refreshUsage()
-      if (root.tab === "volumes") root.volumeSizes = []
+      if (root.hintTab === "volumes") root.volumeSizes = []
     }
   }
 
