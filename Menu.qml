@@ -75,9 +75,11 @@ Item {
   // Plugin lifecycle: the host calls open(payloadJson) on summon and close()
   // on hide, and reads `opened` to decide what `toggle` means — so a close
   // from inside (Esc, a click away) needs nothing more than `opened = false`.
-  // keepLoaded, so every open starts from a clean slate.
+  // The view is rebuilt on every open, and state lives in PodmanState.
   function open(payloadJson) {
     root.settings = root.readSettings()
+    PodmanState.settings = root.settings
+    if (!root.opened) PodmanState.acquire("view")
     root.targetScreen = root.focusedScreen()
     view.defaultTab = root.tabFrom(payloadJson, root.settings.defaultTab)
     view.reset()
@@ -85,6 +87,7 @@ Item {
   }
 
   function close() {
+    if (root.opened) PodmanState.release("view")
     view.dismiss()
     root.opened = false
   }
@@ -94,14 +97,8 @@ Item {
     else root.open("{}")
   }
 
-  // Polls only while open: a closed menu costs nothing, and a hidden one
-  // stays loaded, so a stop or prune in flight is never killed by Esc.
-  PodmanState {
-    id: podmanState
-    active: root.opened
-    background: false
-    settings: root.settings
-  }
+  // A host unload (toggle-close) may skip close(): release what open() took.
+  Component.onDestruction: if (root.opened) PodmanState.release("view")
 
   PanelWindow {
     id: panel
@@ -163,7 +160,7 @@ Item {
           // and eliding are computed against what the reader sees.
           anchors.fill: parent
           large: true
-          podman: podmanState
+          podman: PodmanState
           // The card may take 85% of the screen; the list gets what the rest of
           // the view leaves of that, so the footer is never clipped (#10).
           // What the card's 85% leaves after the chrome. No fixed ceiling and
@@ -177,7 +174,7 @@ Item {
           onCloseRequested: root.close()
           // No neighbouring bar panel to hand over to: Tab walks the tabs.
           onSwitchPanelRequested: function(direction) {
-            podmanState.setTab(Model.shiftTab(podmanState.tab, direction))
+            PodmanState.setTab(Model.shiftTab(PodmanState.tab, direction))
           }
         }
       }

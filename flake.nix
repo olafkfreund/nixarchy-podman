@@ -19,6 +19,7 @@
         ./Panel.qml
         ./Menu.qml
         ./PodmanState.qml
+        ./qmldir
         ./PodmanView.qml
         ./ResourceList.qml
         ./TabStrip.qml
@@ -73,9 +74,9 @@
                 and (.kinds | index("menu") and index("bar-widget"))
                 and .entryPoints.menu == "Menu.qml"
                 and .entryPoints.barWidget == "Panel.qml"
-                and .keepLoaded == true
+                and (has("keepLoaded") | not)
               ' ${plugin}/manifest.json > /dev/null || {
-                echo "manifest.json: schemaVersion, id, kinds, entryPoints or keepLoaded is wrong" >&2
+                echo "manifest.json: schemaVersion, id, kinds, entryPoints is wrong, or keepLoaded is back" >&2
                 exit 1
               }
               for f in $(jq -r '.entryPoints[]' ${plugin}/manifest.json); do

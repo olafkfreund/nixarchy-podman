@@ -7,7 +7,7 @@ import qs.Commons as Commons
 import "Model.js" as Model
 
 // The bar widget: a badge that keeps an eye on Podman, and a keyboard popup
-// under it. The data lives in PodmanState and the popup in PodmanView, which
+// under it. The data lives in the PodmanState singleton and the popup in PodmanView, which
 // the full-screen menu (Menu.qml) shares.
 Panel {
   id: root
@@ -30,22 +30,38 @@ Panel {
   readonly property color foreground: bar ? bar.foreground : Commons.Color.foreground
   readonly property string fontFamily: bar ? bar.fontFamily : Style.font.family
 
-  PodmanState {
-    id: podmanState
-    // The badge needs counts while the popup is closed.
-    background: true
-    active: root.opened
-    settings: ({
+  function pushSettings() {
+    PodmanState.settings = {
       refreshIntervalSec: root.refreshIntervalSec,
       showStopped: root.showStopped,
       showStats: root.showStats,
       showVolumeSizes: root.showVolumeSizes
-    })
+    }
+  }
+
+  onRefreshIntervalSecChanged: pushSettings()
+  onShowStoppedChanged: pushSettings()
+  onShowStatsChanged: pushSettings()
+  onShowVolumeSizesChanged: pushSettings()
+
+  // The badge needs counts while the popup is closed.
+  Component.onCompleted: {
+    pushSettings()
+    PodmanState.acquire("bar")
+  }
+  Component.onDestruction: {
+    PodmanState.release("bar")
+    if (root.opened) PodmanState.release("view")
   }
 
   onOpenedChanged: {
-    if (opened) view.reset()
-    else view.dismiss()
+    if (opened) {
+      PodmanState.acquire("view")
+      view.reset()
+    } else {
+      PodmanState.release("view")
+      view.dismiss()
+    }
   }
 
   IpcHandler {
@@ -54,9 +70,9 @@ Panel {
     function open(): void { root.open() }
     function close(): void { root.close() }
     function toggle(): void { root.toggle() }
-    function refresh(): void { podmanState.refreshAll() }
-    function stopAll(): void { podmanState.stopEverything() }
-    function tab(name: string): void { podmanState.setTab(name) }
+    function refresh(): void { PodmanState.refreshAll() }
+    function stopAll(): void { PodmanState.stopEverything() }
+    function tab(name: string): void { PodmanState.setTab(name) }
   }
 
   // ------------------------------------------------------------------- bar
@@ -69,15 +85,15 @@ Panel {
     anchors.fill: parent
     bar: root.bar
     text: Model.Glyph.podman
-    visible: !root.hideWhenEmpty || podmanState.counts.total > 0
-    dimmed: podmanState.counts.running === 0
-    active: podmanState.counts.alerting > 0 || podmanState.counts.running > 0
+    visible: !root.hideWhenEmpty || PodmanState.counts.total > 0
+    dimmed: PodmanState.counts.running === 0
+    active: PodmanState.counts.alerting > 0 || PodmanState.counts.running > 0
     useActiveColor: true
-    activeColor: podmanState.counts.alerting > 0 ? Commons.Color.urgent : Commons.Color.accent
-    tooltipText: "Podman · " + Model.summaryText(podmanState.containers, podmanState.daemonReachable)
+    activeColor: PodmanState.counts.alerting > 0 ? Commons.Color.urgent : Commons.Color.accent
+    tooltipText: "Podman · " + Model.summaryText(PodmanState.containers, PodmanState.daemonReachable)
 
     onPressed: function(b) {
-      if (b === Qt.MiddleButton) podmanState.refresh()
+      if (b === Qt.MiddleButton) PodmanState.refresh()
       else root.toggle()
     }
   }
@@ -97,7 +113,7 @@ Panel {
     PodmanView {
       id: view
       anchors.fill: parent
-      podman: podmanState
+      podman: PodmanState
       defaultTab: root.defaultTab
       foreground: root.foreground
       fontFamily: root.fontFamily

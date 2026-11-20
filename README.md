@@ -201,7 +201,7 @@ The QML:
 
 | File | Role |
 | --- | --- |
-| `PodmanState.qml` | Data, polling and every Podman command. One per surface; it polls only while its surface is open (the bar also keeps a slow poll for its glyph). |
+| `PodmanState.qml` | Data, polling and every Podman command. A shared singleton; it polls fast only while a view is open (the bar keeps a slow poll for its glyph), and its commands survive the menu unloading. |
 | `PodmanView.qml` | Tabs, cursor, filter, confirmations, keys. Shared by both surfaces. |
 | `Panel.qml` | The bar widget: glyph plus popup. |
 | `Menu.qml` | The full-screen menu. |

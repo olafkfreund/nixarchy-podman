@@ -1,24 +1,41 @@
+pragma Singleton
+
 import QtQuick
 import Quickshell
 import Quickshell.Io
 import "Model.js" as Model
 
 // Everything the panel knows about Podman, and every way it talks to it.
-// Nothing here draws: the bar popup and the full-screen menu each hold one of
-// these and hand it to a PodmanView.
+// Nothing here draws: the bar popup and the full-screen menu are views of it.
 //
-// ponytail: one instance per surface, so both open at once query Podman
-// twice. A shared service-kind plugin would fix that if it ever matters.
-Item {
+// One instance for both surfaces (qmldir makes this a singleton), so the
+// action and copy processes outlive the menu being unloaded, and a result
+// that arrives while it is gone is still here when it opens again.
+Singleton {
   id: root
-  visible: false
 
   // {refreshIntervalSec, showStopped, showStats, showVolumeSizes}
+  // Whichever surface wrote it last wins; both read the same bar entry.
   property var settings: ({})
-  // The surface is open: poll fast, fetch stats and resources.
-  property bool active: false
-  // Keep the slow container poll running while closed (the bar badge).
-  property bool background: false
+
+  // Polling is per-surface: each surface acquires on showing and releases on
+  // hiding, so one closing never stops the other's polling.
+  property int bars: 0
+  property int views: 0
+  // A view is open: poll fast, fetch stats and resources.
+  readonly property bool active: views > 0
+  // The bar is loaded: keep the slow container poll running (the badge).
+  readonly property bool background: bars > 0
+
+  function acquire(kind) {
+    if (kind === "bar") bars += 1
+    else views += 1
+  }
+
+  function release(kind) {
+    if (kind === "bar") bars = Math.max(0, bars - 1)
+    else views = Math.max(0, views - 1)
+  }
 
   signal closeRequested()
   // Fired before `tab` changes, so the list can empty itself first.
@@ -388,7 +405,7 @@ Item {
       // Not commandSucceeded: this is plain argv with no head, so there is no
       // pipeline to truncate and any non-zero code is a real refusal (#21).
       if (code !== 0) root.lastError = Model.errorText(actionErr.text)
-      // A closed menu stays loaded; it must not poll just because an action ended.
+      // Nothing open and no bar: do not poll just because an action ended.
       if (root.active || root.background) root.refresh()
       root.refreshResources()
       root.refreshUsage()

@@ -22,12 +22,12 @@ is [`docs/usage.md`](docs/usage.md).
 | Path | Owns |
 | --- | --- |
 | `Model.js` | All logic: parsing Podman output, what is unused, sorting, rows, commands, the menu's settings. Pure `.pragma library`, no QML, tested under Node. |
-| `PodmanState.qml` | Data, polling timers and every `Process` that runs `podman`. One instance per surface. |
+| `PodmanState.qml` | Data, polling timers and every `Process` that runs `podman`. A `pragma Singleton` (listed in `qmldir`), shared by both surfaces; its action and copy processes survive the menu unloading. |
 | `PodmanView.qml` | Interaction: tabs, cursor, filter, confirmations, keys, and the drawn list. Shared by both surfaces. |
 | `Panel.qml` | The bar widget host: glyph, `KeyboardPanel` popup, IPC target `nixarchy.podman.bar`. |
 | `Menu.qml` | The full-screen menu host (manifest kind `menu`), with the view scaled 1.45×. |
 | `ResourceList.qml`, `TabStrip.qml`, `ShortcutSheet.qml` | Drawing pieces used by the view. |
-| `manifest.json` | Plugin id `nixarchy.podman`, kinds `menu` + `bar-widget`, `keepLoaded: true`, settings schema. |
+| `manifest.json` | Plugin id `nixarchy.podman`, kinds `menu` + `bar-widget`, no `keepLoaded` (the menu unloads safely), settings schema. |
 | `flake.nix` | The package (an explicit `files` list, real copies) and `checks.<system>.default`. |
 | `share/omarchy-menu.jsonc` | The Omarchy menu row users paste in. |
 | `tests/` | Node tests for `Model.js` (`tests/run.js`). |
@@ -39,7 +39,7 @@ is [`docs/usage.md`](docs/usage.md).
 
 ```bash
 node tests/run.js                              # Model tests
-nix flake check                                # tests, manifest + keepLoaded, entry points, no symlinks in the repo, no pacman/yay in code, no hex colours, the pipefail invariants
+nix flake check                                # tests, manifest (no keepLoaded), entry points, no symlinks in the repo, no pacman/yay in code, no hex colours, the pipefail invariants
 nix flake check --all-systems --no-build       # aarch64 evaluates
 nix build                                      # the plugin folder, exactly as nixarchy links it
 omarchy plugin validate "$(readlink -f result)"
@@ -130,11 +130,11 @@ Each rule records a real failure or a hard constraint:
   and overrides a pinned theme token. `nix flake check` fails on either. The
   shell's `PanelHero` and `ConfirmDialog` are drawn locally because their sizes
   are internal — delete those copies if omarchy ever exposes a `fontSize`.
-- **The menu is keep-loaded.** `open()` must reset the view's state, drop the filter
-  field's focus and refocus the key catcher; otherwise the next keys land in a stale
-  filter.
-- **`PodmanState` does not poll while its surface is closed.** The bar's slow
-  background poll for the glyph is the only exception.
+- **The menu unloads.** State lives in the `PodmanState` singleton, so a stop or prune
+  survives it. `open()` must still reset the view's state and refocus the key catcher.
+- **`PodmanState` polls per surface.** Each surface `acquire`s on showing and
+  `release`s on hiding; the fast poll runs only while a view is open, and the bar's slow
+  poll for the glyph while the bar is loaded.
 - **Logic goes in `Model.js`, with a Node test.** Keep QML to drawing and wiring.
 - **A user-visible change updates `docs/usage.md` (and the README tables) in the same
   PR, and retakes the captures in `docs/img/` it makes wrong.** `docs/img/` must stay
