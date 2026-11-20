@@ -13,5 +13,6 @@ repeated below. This is the one deliberate copy; if it ever disagrees with
 - **Every piped `sh -c` starts with `set -o pipefail`, and the first command inside a
   `{ …; }` group ends with `|| exit 1`.** Without them, a failing `podman` looks
   like an empty list.
-- **`PodmanState` does not poll while its surface is closed.** The bar's slow
-  background poll for the glyph is the only exception.
+- **`PodmanState` polls per surface.** Each surface `acquire`s on showing and
+  `release`s on hiding; the fast poll runs only while a view is open, and the bar's slow
+  poll for the glyph while the bar is loaded.

@@ -19,6 +19,7 @@
         ./Panel.qml
         ./Menu.qml
         ./PodmanState.qml
+        ./qmldir
         ./PodmanView.qml
         ./ResourceList.qml
         ./TabStrip.qml
@@ -73,9 +74,9 @@
                 and (.kinds | index("menu") and index("bar-widget"))
                 and .entryPoints.menu == "Menu.qml"
                 and .entryPoints.barWidget == "Panel.qml"
-                and .keepLoaded == true
+                and (has("keepLoaded") | not)
               ' ${plugin}/manifest.json > /dev/null || {
-                echo "manifest.json: schemaVersion, id, kinds, entryPoints or keepLoaded is wrong" >&2
+                echo "manifest.json: schemaVersion, id, kinds, entryPoints is wrong, or keepLoaded is back" >&2
                 exit 1
               }
               for f in $(jq -r '.entryPoints[]' ${plugin}/manifest.json); do
@@ -139,6 +140,13 @@
               if grep -n 'code === 0' ${./PodmanState.qml}; then
                 echo "use Model.commandSucceeded: a truncating head exits 141" >&2
                 exit 1
+              fi
+
+              # The singleton is shared by both surfaces, so it holds data and
+              # processes only: per-surface state (tab, close request) lives in
+              # PodmanView, or one surface would drive the other.
+              if grep -nE 'closeRequested|tabReset|property string tab\b' ${./PodmanState.qml}; then
+                echo "per-surface state is back in PodmanState" >&2; exit 1
               fi
 
               touch "$out"

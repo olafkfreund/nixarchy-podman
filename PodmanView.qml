@@ -64,7 +64,21 @@ FocusScope {
 
   // ------------------------------------------------------------------ state
 
+  // Per surface: the bar popup and the menu each keep their own tab, filter,
+  // cursor and error line; only the data is shared through `podman`.
+  property string tab: "containers"
   property string filterText: ""
+  property string errorMessage: ""
+  property bool shown: false
+
+  readonly property var items: {
+    if (tab === "images") return root.podman.images
+    if (tab === "volumes") return root.podman.sizedVolumes
+    if (tab === "networks") return root.podman.networks
+    return root.podman.containers
+  }
+  readonly property string usageLine: Model.usageText(root.podman.usage, tab, items)
+  readonly property bool prunable: Model.canPrune(tab, root.podman.usage, items)
 
   property var pendingCommand: null
   property string confirmMessage: ""
@@ -85,32 +99,48 @@ FocusScope {
 
   // ------------------------------------------------------------- derivation
 
-  readonly property var visibleItems: root.podman.tab === "containers"
+  readonly property var visibleItems: root.tab === "containers"
     ? Model.filterContainers(root.podman.containers, filterText)
-    : Model.filterResources(root.podman.items, filterText)
-  readonly property var sections: Model.holdOrder(root.podman.tab === "containers"
+    : Model.filterResources(root.items, filterText)
+  readonly property var sections: Model.holdOrder(root.tab === "containers"
     ? Model.sectionsFor(visibleItems)
     : Model.usageSectionsFor(visibleItems), heldKeys)
-  readonly property var rows: Model.rowsForSections(sections, root.podman.tab)
+  readonly property var rows: Model.rowsForSections(sections, root.tab)
 
   readonly property var cursorRow: cursorIndex >= 0 && cursorIndex < rows.length ? rows[cursorIndex] : null
-  readonly property var cursorItem: cursorRow ? Model.itemById(root.podman.items, cursorRow.id) : null
+  readonly property var cursorItem: cursorRow ? Model.itemById(root.items, cursorRow.id) : null
 
   onRowsChanged: root.cursorIndex = Model.cursorFollow(rows, root.cursorKey, root.cursorIndex)
   // From rows directly: a derived binding like cursorRow can be one pass stale
   // inside a change handler (the #10 tab-switch glitch).
   onCursorIndexChanged: root.cursorKey = cursorIndex >= 0 && cursorIndex < rows.length ? rows[cursorIndex].key : ""
 
+  // A new action starts: the old message no longer applies.
   Connections {
     target: root.podman
-    function onTabReset() {
-      list.clear()
-      root.filterText = ""
-      root.cursorIndex = 0
-      root.cursorActive = false
-      filterField.text = ""
-    }
-    function onCloseRequested() { root.closeRequested() }
+    function onBusyChanged() { if (root.podman.busy) root.errorMessage = "" }
+    function onPendingResultChanged() { root.takeResult() }
+  }
+
+  // Show an action result once, here, if this surface is open.
+  function takeResult() {
+    if (!root.shown || root.podman.pendingResult === "") return
+    root.errorMessage = root.podman.pendingResult
+    root.podman.pendingResult = ""
+  }
+
+  function setTab(key) {
+    if (!Model.isTabKey(key) || key === root.tab) return
+    // Empty the list before the rows underneath it change, so the new tab is
+    // inserted into an empty model rather than diffed against the old one.
+    list.clear()
+    root.filterText = ""
+    root.cursorIndex = 0
+    root.cursorActive = false
+    filterField.text = ""
+    root.tab = key
+    root.errorMessage = ""
+    root.podman.tabChanged(key)
   }
 
   Connections {
@@ -131,15 +161,20 @@ FocusScope {
     filterText = ""
     filterField.text = ""
     filterField.focus = false
-    root.podman.lastError = ""
+    root.errorMessage = ""
     helpOpen = false
     closeConfirm()
-    root.podman.setTab(defaultTab)
+    root.shown = true
+    setTab(defaultTab)
+    // Not skipped when the tab is unchanged: the polling hint is shared.
+    root.podman.tabChanged(root.tab)
+    root.takeResult()
     Qt.callLater(function() { keyCatcher.forceActiveFocus() })
   }
 
   // Called when the surface closes.
   function dismiss() {
+    root.shown = false
     helpOpen = false
     closeConfirm()
   }
@@ -154,18 +189,18 @@ FocusScope {
   // Every row's buttons come from Model.actionsFor, so this is the one place
   // a verb turns into something that happens.
   function dispatch(kind, id, verb) {
-    var item = Model.itemById(root.podman.items, id)
+    var item = Model.itemById(root.items, id)
     if (verb === "copy") { root.podman.copyText(Model.copyValue(kind, item)); return }
-    if (verb === "logs") { root.podman.viewLogs(id); return }
-    if (verb === "shell") { root.podman.openShell(id); return }
+    if (verb === "logs") { root.podman.viewLogs(id); root.closeRequested(); return }
+    if (verb === "shell") { root.podman.openShell(id); root.closeRequested(); return }
     if (verb === "remove") { askRemove(kind, id); return }
     if (verb === "start" || verb === "stop" || verb === "restart") root.podman.runAction([id], verb)
   }
 
   function activateRow() {
     if (!cursorActive || !cursorRow) return
-    if (root.podman.tab === "containers") root.podman.toggleContainer(cursorItem)
-    else dispatch(root.podman.tab, cursorRow.id, "copy")
+    if (root.tab === "containers") root.podman.toggleContainer(cursorItem)
+    else dispatch(root.tab, cursorRow.id, "copy")
   }
 
   // ---------------------------------------------------------- confirmation
@@ -181,18 +216,18 @@ FocusScope {
   }
 
   function askRemove(kind, id) {
-    var item = Model.itemById(root.podman.items, id)
+    var item = Model.itemById(root.items, id)
     var command = Model.removeCommand(kind, id)
     if (!item || !command) return
     ask(command, Model.removeMessage(kind, item), "Remove")
   }
 
   function askPrune() {
-    var spec = Model.pruneSpec(root.podman.tab)
-    if (!spec || !root.podman.prunable) return
+    var spec = Model.pruneSpec(root.tab)
+    if (!spec || !root.prunable) return
     // Named from the unfiltered list: a prune ignores the filter (#14).
-    var list = root.podman.tab === "containers" ? root.podman.containers : root.podman.items
-    ask(spec.args, Model.pruneMessage(root.podman.tab, list, {
+    var list = root.tab === "containers" ? root.podman.containers : root.items
+    ask(spec.args, Model.pruneMessage(root.tab, list, {
       showStopped: root.podman.showStopped,
       filter: root.filterText
     }), spec.label)
@@ -249,21 +284,21 @@ FocusScope {
     if (key === "/") { filterField.forceActiveFocus(); return }
 
     var digit = "1234".indexOf(key)
-    if (digit !== -1) { root.podman.setTab(Model.tabKeyAt(digit)); return }
+    if (digit !== -1) { setTab(Model.tabKeyAt(digit)); return }
 
     if (key === "u") { root.podman.refreshAll(); return }
-    if (key === "d") { root.podman.launchTui(); return }
+    if (key === "d") { root.podman.launchTui(); root.closeRequested(); return }
     if (key === "p") { askPrune(); return }
 
     if (!cursorActive || !cursorRow) return
-    if (key === "c") { dispatch(root.podman.tab, cursorRow.id, "copy"); return }
+    if (key === "c") { dispatch(root.tab, cursorRow.id, "copy"); return }
 
-    if (root.podman.tab !== "containers" || !cursorItem) return
+    if (root.tab !== "containers" || !cursorItem) return
     // The row buttons grey out while an action is in flight; the keys did not,
     // so a second press was swallowed with no sign it had been (#21).
     if (root.podman.busy) return
-    if (key === "o") root.podman.viewLogs(cursorItem.id)
-    else if (key === "s") { if (cursorItem.up) root.podman.openShell(cursorItem.id) }
+    if (key === "o") { root.podman.viewLogs(cursorItem.id); root.closeRequested() }
+    else if (key === "s") { if (cursorItem.up) { root.podman.openShell(cursorItem.id); root.closeRequested() } }
     else if (key === "r") root.podman.restartContainer(cursorItem)
     else if (key === "n") root.podman.copyText(cursorItem.name)
   }
@@ -271,7 +306,7 @@ FocusScope {
   function removeAtCursor() {
     if (!cursorActive || !cursorRow) return
     if (!Model.allowsVerb(cursorRow, "remove")) return
-    askRemove(root.podman.tab, cursorRow.id)
+    askRemove(root.tab, cursorRow.id)
   }
 
   // ----------------------------------------------------------------- view
@@ -296,14 +331,14 @@ FocusScope {
       onMoveRequested: function(dx, dy) {
         if (root.helpOpen) return
         if (dy !== 0) root.moveCursor(dy)
-        else if (dx !== 0) root.podman.setTab(Model.shiftTab(root.podman.tab, dx))
+        else if (dx !== 0) setTab(Model.shiftTab(root.tab, dx))
       }
       onActivateRequested: if (root.helpOpen) root.helpOpen = false; else root.activateRow()
       onDeleteRequested: if (!root.helpOpen) root.removeAtCursor()
       // esc: the help sheet, then Podman's message, then the panel (#13).
       onCloseRequested: {
         if (root.helpOpen) root.helpOpen = false
-        else if (root.podman.lastError !== "") root.podman.lastError = ""
+        else if (root.errorMessage !== "") root.errorMessage = ""
         else root.closeRequested()
       }
       onTabRequested: function(direction) { root.switchPanelRequested(direction) }
@@ -407,7 +442,7 @@ FocusScope {
 
             PanelActionButton {
               fontSize: root.fontIcon
-              visible: root.podman.tab === "containers" && root.podman.counts.running > 0
+              visible: root.tab === "containers" && root.podman.counts.running > 0
               iconText: Model.Glyph.stop
               tooltipText: "Stop every running container"
               foreground: root.foreground
@@ -424,12 +459,12 @@ FocusScope {
           fontTab: root.fontTab
           id: tabStrip
           width: parent.width
-          current: root.podman.tab
-          counts: root.podman.tabCounts
+          current: root.tab
+          counts: root.tabCounts
           alerting: root.podman.counts.alerting > 0
           foreground: root.foreground
           fontFamily: root.fontFamily
-          onSelected: function(key) { root.podman.setTab(key) }
+          onSelected: function(key) { setTab(key) }
         }
 
         TextField {
@@ -439,7 +474,7 @@ FocusScope {
           // The operator stays on the first line: a line that ends on a
           // complete expression gets a semicolon inserted for it, and the
           // rest of the binding is quietly dropped.
-          placeholderText: Model.Glyph.search + "  Filter " + Model.tabNoun(root.podman.tab) + "s" +
+          placeholderText: Model.Glyph.search + "  Filter " + Model.tabNoun(root.tab) + "s" +
             (activeFocus ? "" : "   /")
           onTextChanged: {
             root.filterText = text
@@ -463,7 +498,7 @@ FocusScope {
           width: parent.width
           maxHeight: root.listMaxHeight
           rows: root.rows
-          kind: root.podman.tab
+          kind: root.tab
           stats: root.podman.stats
           showStats: root.podman.showStats
           busy: root.podman.busy
@@ -475,7 +510,7 @@ FocusScope {
           fontFamily: root.fontFamily
 
           onActionRequested: function(kind, id, verb) { root.dispatch(kind, id, verb) }
-          onRowClicked: function(id) { root.dispatch(root.podman.tab, id, "copy") }
+          onRowClicked: function(id) { root.dispatch(root.tab, id, "copy") }
           onSectionToggled: function(key) { root.toggleSection(key) }
           onCursorRequested: function(index) { root.setCursor(index) }
         }
@@ -491,11 +526,11 @@ FocusScope {
           Text {
             width: parent.width
             horizontalAlignment: Text.AlignHCenter
-            text: Model.emptyText(root.podman.tab, {
+            text: Model.emptyText(root.tab, {
               everLoaded: root.podman.everLoaded,
               daemonReachable: root.podman.daemonReachable,
               permissionDenied: root.podman.permissionDenied,
-              filtered: root.podman.items.length > 0,
+              filtered: root.items.length > 0,
               showStopped: root.podman.showStopped
             })
             color: root.dim
@@ -526,7 +561,7 @@ FocusScope {
         Item {
           id: errorLine
           width: parent.width
-          visible: root.podman.lastError !== ""
+          visible: root.errorMessage !== ""
           implicitHeight: visible ? Math.max(errorText.implicitHeight, errorDismiss.height) : 0
           height: implicitHeight
 
@@ -548,7 +583,7 @@ FocusScope {
             anchors.right: errorDismiss.left
             anchors.rightMargin: Style.spacing.md
             anchors.top: parent.top
-            text: root.podman.lastError
+            text: root.errorMessage
             textFormat: Text.PlainText
             color: Commons.Color.urgent
             font.family: root.fontFamily
@@ -567,7 +602,7 @@ FocusScope {
             fontFamily: root.fontFamily
             fontSize: Style.font.iconSmall
             size: Style.space(20)
-            onClicked: root.podman.lastError = ""
+            onClicked: root.errorMessage = ""
           }
         }
 
@@ -599,7 +634,7 @@ FocusScope {
             Text {
               anchors.verticalCenter: parent.verticalCenter
               width: Math.min(implicitWidth, usageRow.width - Style.space(20))
-              text: root.podman.usageLine
+              text: root.usageLine
               textFormat: Text.PlainText
               color: root.dim
               font.family: root.fontFamily
@@ -612,17 +647,17 @@ FocusScope {
             id: pruneButton
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
-            enabled: root.podman.prunable && !root.podman.busy
+            enabled: root.prunable && !root.podman.busy
             bordered: true
             iconText: Model.Glyph.prune
             iconSize: Style.font.iconSmall
-            text: Model.pruneSpec(root.podman.tab) ? Model.pruneSpec(root.podman.tab).label : ""
+            text: Model.pruneSpec(root.tab) ? Model.pruneSpec(root.tab).label : ""
             tooltipText: "Reclaim what nothing is using  (p)"
-            foreground: root.podman.prunable ? root.foreground : root.dim
+            foreground: root.prunable ? root.foreground : root.dim
             fontFamily: root.fontFamily
             fontSize: Style.font.caption
             verticalPadding: Style.spacing.xs
-            opacity: root.podman.prunable ? 1.0 : 0.5
+            opacity: root.prunable ? 1.0 : 0.5
             onClicked: root.askPrune()
           }
         }
